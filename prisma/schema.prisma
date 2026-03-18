@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RoutineType {
+  MORNING
+  EVENING
+  CUSTOM
+}
+
+enum MemoryCat {
+  GOAL
+  PREFERENCE
+  PATTERN
+  MILESTONE
+  CONTEXT
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id              String    @id @default(cuid())
+  supabase_id     String    @unique
+  email           String    @unique
+  name            String?
+  onboarding_done Boolean   @default(false)
+  role            UserRole  @default(USER)
+  timezone        String    @default("Europe/Amsterdam")
+  notify_enabled  Boolean   @default(false)
+  notify_time     String?   // e.g. "07:00"
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  routines        Routine[]
+  daily_logs      DailyLog[]
+  check_ins       CheckIn[]
+  memory_entries  MemoryEntry[]
+  goals           Goal[]
+  conversations   Conversation[]
+  weekly_summaries WeeklySummary[]
+  push_tokens     PushToken[]
+
+  @@map("users")
+}
+
+model Routine {
+  id         String      @id @default(cuid())
+  user_id    String
+  name       String
+  type       RoutineType
+  is_active  Boolean     @default(true)
+  sort_order Int         @default(0)
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
+
+  user  User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  items RoutineItem[]
+
+  @@map("routines")
+}
+
+model RoutineItem {
+  id              String   @id @default(cuid())
+  routine_id      String
+  name            String
+  duration_minutes Int
+  sort_order      Int      @default(0)
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  routine    Routine    @relation(fields: [routine_id], references: [id], onDelete: Cascade)
+  daily_logs DailyLog[]
+
+  @@map("routine_items")
+}
+
+model DailyLog {
+  id              String   @id @default(cuid())
+  user_id         String
+  routine_item_id String
+  date            DateTime @db.Date
+  completed       Boolean  @default(true)
+  completed_at    DateTime @default(now())
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  user         User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  routine_item RoutineItem @relation(fields: [routine_item_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, routine_item_id, date])
+  @@map("daily_logs")
+}
+
+model CheckIn {
+  id         String   @id @default(cuid())
+  user_id    String
+  date       DateTime @db.Date
+  energy     Int      // 1-5
+  focus      Int      // 1-5
+  mood       Int      // 1-5
+  note       String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, date])
+  @@map("check_ins")
+}
+
+model MemoryEntry {
+  id         String    @id @default(cuid())
+  user_id    String
+  category   MemoryCat
+  content    String
+  source     String    // e.g. "onboarding", "chat", "checkin"
+  relevance  Float     @default(1.0)
+  expires_at DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("memory_entries")
+}
+
+model Goal {
+  id         String   @id @default(cuid())
+  user_id    String
+  title      String
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("goals")
+}
+
+model Conversation {
+  id         String   @id @default(cuid())
+  user_id    String
+  date       DateTime @db.Date
+  summary    String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user     User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([user_id, date])
+  @@map("conversations")
+}
+
+model Message {
+  id              String      @id @default(cuid())
+  conversation_id String
+  role            MessageRole
+  content         String
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+
+  conversation Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model WeeklySummary {
+  id             String   @id @default(cuid())
+  user_id        String
+  week_start     DateTime @db.Date
+  summary        String
+  highlights     String[] // array of strings
+  suggestions    String[] // array of strings
+  avg_energy     Float?
+  avg_focus      Float?
+  avg_mood       Float?
+  completion_pct Float?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, week_start])
+  @@map("weekly_summaries")
+}
+
+model PushToken {
+  id         String   @id @default(cuid())
+  user_id    String
+  token      String   @unique
+  platform   String   // "web" | "fcm"
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("push_tokens")
+}
+
+model AdminPrompt {
+  id         String   @id @default(cuid())
+  key        String   @unique // e.g. "coach_system", "weekly_summary"
+  name       String
+  content    String
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("admin_prompts")
+}
