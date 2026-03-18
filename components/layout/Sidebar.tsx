@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ListChecks, BarChart3, MessageCircle, LogOut } from "lucide-react";
+import { Home, ListChecks, BarChart3, MessageCircle, Bot, LogOut, Sun, Moon } from "lucide-react";
 import { createBrowserClient } from "@/lib/auth/supabase-browser";
 import { useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
+  { href: "/first-watch", label: "First Watch", icon: Sun },
+  { href: "/night-watch", label: "Night Watch", icon: Moon },
+  { href: "/chat", label: "AI Coach", icon: Bot },
   { href: "/routine", label: "My Routine", icon: ListChecks },
   { href: "/progress", label: "Progress", icon: BarChart3 },
   { href: "/checkin", label: "Check-in", icon: MessageCircle },

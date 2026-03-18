@@ -41,7 +41,10 @@
       "Bash(dig +short aws-1-eu-west-1.pooler.supabase.com)",
       "Bash(nslookup aws-1-eu-west-1.pooler.supabase.com)",
       "Bash(getent hosts:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(ls -la /root/devprojects/DailyAICoach/app/\\\\\\(dashboard\\\\\\)/)",
+      "Bash(node -e \"console.log\\(require\\(''zod/package.json''\\).version\\)\")",
+      "Bash(npx next:*)"
     ]
   }
 }

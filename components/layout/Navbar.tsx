@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ListChecks, BarChart3, MessageCircle } from "lucide-react";
+import { Home, BarChart3, Bot, Sun, Moon } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/routine", label: "Routine", icon: ListChecks },
+  { href: "/first-watch", label: "Morning", icon: Sun },
+  { href: "/night-watch", label: "Evening", icon: Moon },
+  { href: "/chat", label: "Coach", icon: Bot },
   { href: "/progress", label: "Progress", icon: BarChart3 },
-  { href: "/checkin", label: "Check-in", icon: MessageCircle },
 ];
 
 export function Navbar() {

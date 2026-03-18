@@ -2,7 +2,10 @@ import { prisma } from "@/lib/db/client";
 
 export async function buildContext(userId: string): Promise<string> {
   // Fetch all relevant data in parallel
-  const [user, goals, memories, routine, logs, checkin] = await Promise.all([
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [user, goals, memories, routine, logs, checkin, todayWatches] = await Promise.all([
     // User profile
     prisma.user.findUnique({ where: { id: userId } }),
 
@@ -46,13 +49,14 @@ export async function buildContext(userId: string): Promise<string> {
     })(),
 
     // Today's check-in
-    (() => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return prisma.checkIn.findFirst({
-        where: { user_id: userId, date: today },
-      });
-    })(),
+    prisma.checkIn.findFirst({
+      where: { user_id: userId, date: today },
+    }),
+
+    // Today's watches
+    prisma.watch.findMany({
+      where: { user_id: userId, date: today },
+    }),
   ]);
 
   // Build formatted context string
@@ -111,6 +115,20 @@ export async function buildContext(userId: string): Promise<string> {
       .map((m) => `- [${m.category}] ${m.content}`)
       .join("\n");
     sections.push(`## Relevant Memories\n${memoryList}`);
+  }
+
+  // Today's watches
+  if (todayWatches.length > 0) {
+    const watchLines = todayWatches.map((w) => {
+      const type = w.type === "FIRST_WATCH" ? "First Watch" : "Night Watch";
+      const status = w.status === "confirmed" ? "confirmed" : "draft";
+      const secs = w.sections as Record<string, unknown>;
+      const summary = w.type === "FIRST_WATCH"
+        ? `Focus: ${(secs.mission_focus as Record<string, string>)?.primary_focus ?? "not set"}`
+        : `Theme: ${(secs.theme as string) ?? "not set"}`;
+      return `- ${type} (${status}): ${summary}`;
+    }).join("\n");
+    sections.push(`## Today's Watches\n${watchLines}`);
   }
 
   return sections.join("\n\n");

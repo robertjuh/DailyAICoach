@@ -30,6 +30,11 @@ enum UserRole {
   ADMIN
 }
 
+enum WatchType {
+  FIRST_WATCH
+  NIGHT_WATCH
+}
+
 model User {
   id              String    @id @default(cuid())
   supabase_id     String    @unique
@@ -51,6 +56,7 @@ model User {
   conversations   Conversation[]
   weekly_summaries WeeklySummary[]
   push_tokens     PushToken[]
+  watches         Watch[]
 
   @@map("users")
 }
@@ -209,6 +215,23 @@ model PushToken {
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("push_tokens")
+}
+
+model Watch {
+  id         String    @id @default(cuid())
+  user_id    String
+  date       DateTime  @db.Date
+  type       WatchType
+  status     String    @default("draft") // draft | confirmed
+  sections   Json      // structured sections data
+  ai_draft   String?   // raw AI-generated markdown
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, date, type])
+  @@map("watches")
 }
 
 model AdminPrompt {
