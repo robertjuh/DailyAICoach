@@ -35,32 +35,25 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Protected routes: dashboard and onboarding
-  const isProtected =
-    pathname.startsWith("/onboarding") ||
-    pathname === "/" ||
-    pathname.startsWith("/routine") ||
-    pathname.startsWith("/checkin") ||
-    pathname.startsWith("/progress");
+  // Never interfere with the callback route
+  if (pathname === "/callback") {
+    return response;
+  }
 
-  // If not authenticated and trying to access protected routes
-  if (!user && isProtected) {
+  // Auth pages
+  const isAuthPage = pathname === "/login" || pathname === "/register";
+
+  // If authenticated and on auth pages, redirect to dashboard
+  if (user && isAuthPage) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 
-  // If authenticated, check onboarding status for dashboard routes
-  if (user && isProtected && !pathname.startsWith("/onboarding")) {
-    // Check if user has completed onboarding by looking at DB
-    // We use a lightweight approach: check for a cookie or header
-    // For the actual check, the dashboard layout will handle the redirect
-  }
-
-  // If on auth pages and already logged in, redirect to dashboard
-  if (user && (pathname === "/login" || pathname === "/register")) {
+  // Protected routes: everything except auth pages and callback
+  if (!user && !isAuthPage) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
