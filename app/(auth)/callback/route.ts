@@ -7,7 +7,11 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
 
   if (code) {
-    const response = NextResponse.redirect(`${origin}/onboarding`);
+    // Default redirect — will be updated based on onboarding status
+    let redirectUrl = `${origin}/onboarding`;
+
+    // We need to set cookies on the final response, so collect them first
+    const cookieStore: { name: string; value: string; options: Record<string, unknown> }[] = [];
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,9 +22,7 @@ export async function GET(request: NextRequest) {
             return request.cookies.getAll();
           },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options)
-            );
+            cookiesToSet.forEach((cookie) => cookieStore.push(cookie));
           },
         },
       }
@@ -29,7 +31,6 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // Check if user has completed onboarding
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -40,10 +41,15 @@ export async function GET(request: NextRequest) {
         });
 
         if (dbUser?.onboarding_done) {
-          return NextResponse.redirect(`${origin}/`);
+          redirectUrl = `${origin}/`;
         }
       }
 
+      // Create response with correct redirect and apply ALL cookies
+      const response = NextResponse.redirect(redirectUrl);
+      cookieStore.forEach(({ name, value, options }) =>
+        response.cookies.set(name, value, options)
+      );
       return response;
     }
   }

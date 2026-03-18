@@ -35,11 +35,6 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Never interfere with the callback route
-  if (pathname === "/callback") {
-    return response;
-  }
-
   // Auth pages
   const isAuthPage = pathname === "/login" || pathname === "/register";
 
@@ -70,6 +65,6 @@ export const config = {
      * - public files (images, etc.)
      * - API routes (handled by requireAuth)
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|api/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|api/|callback).*)",
   ],
 };
