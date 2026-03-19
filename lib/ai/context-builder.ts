@@ -64,9 +64,14 @@ export async function buildContext(userId: string): Promise<string> {
 
   // User info
   if (user) {
-    sections.push(
-      `## User Profile\n- Name: ${user.name ?? "Unknown"}\n- Timezone: ${user.timezone}\n- Member since: ${user.created_at.toISOString().split("T")[0]}`
-    );
+    const profileLines = [
+      `- Name: ${user.name ?? "Unknown"}`,
+      `- Timezone: ${user.timezone}`,
+      `- First Watch time: ${user.first_watch_time ?? "not set"}`,
+      `- Night Watch time: ${user.night_watch_time ?? "not set"}`,
+      `- Member since: ${user.created_at.toISOString().split("T")[0]}`,
+    ];
+    sections.push(`## User Profile\n${profileLines.join("\n")}`);
   }
 
   // Goals

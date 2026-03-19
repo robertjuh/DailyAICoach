@@ -43,8 +43,10 @@ model User {
   onboarding_done Boolean   @default(false)
   role            UserRole  @default(USER)
   timezone        String    @default("Europe/Amsterdam")
-  notify_enabled  Boolean   @default(false)
-  notify_time     String?   // e.g. "07:00"
+  notify_enabled    Boolean   @default(false)
+  notify_time       String?   // e.g. "07:00"
+  first_watch_time  String?   // e.g. "07:00"
+  night_watch_time  String?   // e.g. "21:00"
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
 

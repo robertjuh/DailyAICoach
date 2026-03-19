@@ -44,7 +44,9 @@
       "Bash(npx tsx:*)",
       "Bash(ls -la /root/devprojects/DailyAICoach/app/\\\\\\(dashboard\\\\\\)/)",
       "Bash(node -e \"console.log\\(require\\(''zod/package.json''\\).version\\)\")",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(find /root/devprojects/DailyAICoach/app/api/v1/users -type f -name *.ts)",
+      "Bash(find /root/devprojects/DailyAICoach/lib/db/queries -type f -name *.ts)"
     ]
   }
 }

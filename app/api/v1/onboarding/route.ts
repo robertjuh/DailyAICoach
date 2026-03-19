@@ -18,63 +18,88 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, goals, routine_items } = parsed.data;
+    const {
+      name,
+      timezone,
+      goals,
+      work_description,
+      default_day_type,
+      first_watch_time,
+      night_watch_time,
+      movement_preference,
+      notify_enabled,
+    } = parsed.data;
 
-    // Create user record (or update if exists)
+    // Create or update user record
     const user = await prisma.user.upsert({
       where: { supabase_id: supabaseUser.id },
       update: {
         name,
+        timezone,
+        first_watch_time,
+        night_watch_time,
+        notify_enabled,
         onboarding_done: true,
       },
       create: {
         supabase_id: supabaseUser.id,
         email: supabaseUser.email!,
         name,
+        timezone,
+        first_watch_time,
+        night_watch_time,
+        notify_enabled,
         onboarding_done: true,
       },
     });
 
     // Create goals
-    await prisma.goal.createMany({
-      data: goals
-        .filter((g) => g.trim().length > 0)
-        .map((title) => ({
+    const filledGoals = goals.filter((g) => g.trim().length > 0);
+    if (filledGoals.length > 0) {
+      await prisma.goal.createMany({
+        data: filledGoals.map((title) => ({
           user_id: user.id,
           title,
           is_active: true,
         })),
-    });
+      });
+    }
 
-    // Create routine with items
-    const routine = await prisma.routine.create({
-      data: {
-        user_id: user.id,
-        name: "Morning Routine",
-        type: "MORNING",
-        items: {
-          create: routine_items.map((item, index) => ({
-            name: item.name,
-            duration_minutes: item.duration_minutes,
-            sort_order: index,
-          })),
-        },
-      },
-      include: { items: true },
-    });
+    // Create GOAL memories
+    for (const goal of filledGoals) {
+      await saveMemory(user.id, "GOAL", `User wants to: ${goal}`, "onboarding");
+    }
 
-    // Create memory entries for each goal
-    for (const goal of goals.filter((g) => g.trim().length > 0)) {
+    // Create PREFERENCE memories for watch-relevant context
+    if (work_description?.trim()) {
       await saveMemory(
         user.id,
-        "GOAL",
-        `User wants to: ${goal}`,
+        "PREFERENCE",
+        `Work context: ${work_description}`,
+        "onboarding"
+      );
+    }
+
+    if (default_day_type) {
+      await saveMemory(
+        user.id,
+        "PREFERENCE",
+        `Default day type: ${default_day_type}`,
+        "onboarding"
+      );
+    }
+
+    if (movement_preference?.trim()) {
+      await saveMemory(
+        user.id,
+        "PREFERENCE",
+        `Movement preference: ${movement_preference}`,
         "onboarding"
       );
     }
 
     return NextResponse.json(
-      { data: { user, routine } },
+      { data: { user } },
       { status: 200 }
     );
   } catch (error) {
