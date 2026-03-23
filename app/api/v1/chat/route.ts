@@ -2,9 +2,10 @@ import { NextRequest } from "next/server";
 import { requireAuth, AuthError } from "@/lib/auth/middleware";
 import { buildContext } from "@/lib/ai/context-builder";
 import { buildSystemPrompt } from "@/lib/ai/prompts/coach-system";
-import { extractAndSaveMemories } from "@/lib/ai/memory-service";
+import { extractAndSaveMemories, extractAndSaveDims } from "@/lib/ai/memory-service";
 import { prisma } from "@/lib/db/client";
 import OpenAI from "openai";
+import { getOpenAIModel } from "@/lib/ai/model-config";
 import { z } from "zod";
 
 const chatInputSchema = z.object({
@@ -72,9 +73,9 @@ export async function POST(request: NextRequest) {
 
     // 5. Stream response from OpenAI
     const stream = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: getOpenAIModel(),
       messages,
-      max_tokens: 1024,
+      max_completion_tokens: 1024,
       temperature: 0.7,
       stream: true,
     });
@@ -110,8 +111,11 @@ export async function POST(request: NextRequest) {
             },
           });
 
-          // 8. Extract and save memories from response
-          await extractAndSaveMemories(userId, fullResponse);
+          // 8. Extract and save memories + DIMs from response
+          await Promise.all([
+            extractAndSaveMemories(userId, fullResponse),
+            extractAndSaveDims(userId, fullResponse),
+          ]);
         } catch (err) {
           console.error("Stream error:", err);
           controller.error(err);

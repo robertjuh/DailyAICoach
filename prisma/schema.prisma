@@ -35,6 +35,27 @@ enum WatchType {
   NIGHT_WATCH
 }
 
+enum DimCategory {
+  DECISION
+  IDEA
+  MICRO_TASK
+}
+
+enum DimStatus {
+  OPEN
+  COMPLETED
+  DEFERRED
+  DELEGATED
+  DELETED
+}
+
+enum DimRecommendation {
+  DO
+  DEFER
+  DELEGATE
+  DELETE
+}
+
 model User {
   id              String    @id @default(cuid())
   supabase_id     String    @unique
@@ -59,6 +80,8 @@ model User {
   weekly_summaries WeeklySummary[]
   push_tokens     PushToken[]
   watches         Watch[]
+  dims            Dim[]
+  priority_filters PriorityFilter[]
 
   @@map("users")
 }
@@ -154,6 +177,7 @@ model Goal {
   updated_at DateTime @updatedAt
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  dims Dim[]
 
   @@map("goals")
 }
@@ -234,6 +258,41 @@ model Watch {
 
   @@unique([user_id, date, type])
   @@map("watches")
+}
+
+model Dim {
+  id              String            @id @default(cuid())
+  user_id         String
+  content         String
+  category        DimCategory       @default(IDEA)
+  status          DimStatus         @default(OPEN)
+  priority_score  Int?              // 0-100
+  recommendation  DimRecommendation?
+  ai_reasoning    String?
+  source          String            @default("manual") // manual | chat | watch
+  related_goal_id String?
+  created_at      DateTime          @default(now())
+  completed_at    DateTime?
+  updated_at      DateTime          @updatedAt
+
+  user         User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  related_goal Goal? @relation(fields: [related_goal_id], references: [id], onDelete: SetNull)
+
+  @@map("dims")
+}
+
+model PriorityFilter {
+  id         String   @id @default(cuid())
+  user_id    String
+  name       String
+  weight     Int      @default(5) // 1-10
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("priority_filters")
 }
 
 model AdminPrompt {

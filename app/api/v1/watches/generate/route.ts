@@ -4,10 +4,10 @@ import { buildContext } from "@/lib/ai/context-builder";
 import { buildFirstWatchPrompt } from "@/lib/ai/prompts/first-watch";
 import { buildNightWatchPrompt } from "@/lib/ai/prompts/night-watch";
 import { prisma } from "@/lib/db/client";
-import { Prisma } from "@prisma/client";
+import { Prisma, type Message as DbMessage } from "@prisma/client";
 import OpenAI from "openai";
+import { getOpenAIModel } from "@/lib/ai/model-config";
 import { z } from "zod";
-
 const generateSchema = z.object({
   type: z.enum(["FIRST_WATCH", "NIGHT_WATCH"]),
   userInput: z.string().optional(),
@@ -53,6 +53,20 @@ export async function POST(request: NextRequest) {
     const dateStr = today.toISOString().split("T")[0];
     let systemPrompt: string;
 
+    // Fetch open DIMs for both watch types
+    const openDims = await prisma.dim.findMany({
+      where: { user_id: userId, status: { in: ["OPEN", "DEFERRED"] } },
+      orderBy: [{ priority_score: "desc" }, { created_at: "desc" }],
+    });
+
+    const dimsSummary = openDims.length > 0
+      ? openDims.map((d) => {
+          const score = d.priority_score !== null ? ` [score: ${d.priority_score}]` : "";
+          const rec = d.recommendation ? ` → ${d.recommendation}` : "";
+          return `- [${d.category}] ${d.content}${score}${rec}`;
+        }).join("\n")
+      : null;
+
     if (type === "FIRST_WATCH") {
       // Get prior Night Watch (yesterday)
       const yesterday = new Date(today);
@@ -78,18 +92,51 @@ export async function POST(request: NextRequest) {
               ai_draft: priorNightWatch.ai_draft,
             }
           : null,
+        openDims: dimsSummary,
       });
     } else {
-      // Get today's First Watch
-      const todayFirstWatch = await prisma.watch.findUnique({
-        where: {
-          user_id_date_type: {
-            user_id: userId,
-            date: today,
-            type: "FIRST_WATCH",
+      // Get today's First Watch, chat history, and completed DIMs today in parallel
+      const todayStart = new Date(today);
+      const todayEnd = new Date(today);
+      todayEnd.setDate(todayEnd.getDate() + 1);
+
+      const [todayFirstWatch, conversation, completedDimsToday] = await Promise.all([
+        prisma.watch.findUnique({
+          where: {
+            user_id_date_type: {
+              user_id: userId,
+              date: today,
+              type: "FIRST_WATCH",
+            },
           },
-        },
-      });
+        }),
+        prisma.conversation.findUnique({
+          where: { user_id_date: { user_id: userId, date: today } },
+          include: { messages: { orderBy: { created_at: "asc" } } },
+        }),
+        prisma.dim.findMany({
+          where: {
+            user_id: userId,
+            status: "COMPLETED",
+            completed_at: { gte: todayStart, lt: todayEnd },
+          },
+        }),
+      ]);
+
+      const chatMessages = conversation?.messages ?? [];
+      const chatSummary =
+        chatMessages.length > 0
+          ? chatMessages
+              .map((m: DbMessage) => {
+                const label = m.role === "USER" ? userName : "Coach";
+                return `[${label}]: ${m.content.slice(0, 500)}`;
+              })
+              .join("\n")
+          : null;
+
+      const completedDimsSummary = completedDimsToday.length > 0
+        ? completedDimsToday.map((d) => `- ${d.content}`).join("\n")
+        : null;
 
       systemPrompt = buildNightWatchPrompt({
         userName,
@@ -101,6 +148,9 @@ export async function POST(request: NextRequest) {
               ai_draft: todayFirstWatch.ai_draft,
             }
           : null,
+        chatHistory: chatSummary,
+        openDims: dimsSummary,
+        completedDims: completedDimsSummary,
       });
     }
 
@@ -117,9 +167,9 @@ export async function POST(request: NextRequest) {
     ];
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: getOpenAIModel(),
       messages,
-      max_tokens: 2048,
+      max_completion_tokens: 2048,
       temperature: 0.7,
       response_format: { type: "json_object" },
     });

@@ -13,12 +13,14 @@ export const onboardingSchema = z.object({
     .optional(),
   first_watch_time: z
     .string()
-    .regex(/^\d{2}:\d{2}$/, "Invalid time format")
+    .regex(/^\d{1,2}:\d{2}(:\d{2})?$/, "Invalid time format")
+    .transform((v) => v.slice(0, 5).padStart(5, "0"))
     .optional()
     .default("07:00"),
   night_watch_time: z
     .string()
-    .regex(/^\d{2}:\d{2}$/, "Invalid time format")
+    .regex(/^\d{1,2}:\d{2}(:\d{2})?$/, "Invalid time format")
+    .transform((v) => v.slice(0, 5).padStart(5, "0"))
     .optional()
     .default("21:00"),
   movement_preference: z.string().max(300).optional(),

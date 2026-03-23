@@ -3,6 +3,7 @@ import { requireAuth, AuthError } from "@/lib/auth/middleware";
 import { buildContext } from "@/lib/ai/context-builder";
 import { prisma } from "@/lib/db/client";
 import OpenAI from "openai";
+import { getOpenAIModel } from "@/lib/ai/model-config";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
     });
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: getOpenAIModel(),
       messages: [
         {
           role: "system",
@@ -34,7 +35,7 @@ ${context}`,
             : "Give me 3 suggestions to get started with a morning routine.",
         },
       ],
-      max_tokens: 300,
+      max_completion_tokens: 300,
       temperature: 0.7,
       response_format: { type: "json_object" },
     });

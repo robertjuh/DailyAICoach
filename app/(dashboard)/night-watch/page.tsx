@@ -110,6 +110,17 @@ export default function NightWatchPage() {
   }, [loadWatch]);
 
   async function generateWatch() {
+
+    console.log("Generating watch");
+    console.log("User input:", userInput);
+    console.log("Type:", "NIGHT_WATCH");
+    console.log("Body:", {
+      type: "NIGHT_WATCH",
+      userInput: userInput || undefined,
+    });
+    
+    
+    
     setGenerating(true);
     try {
       const res = await fetch("/api/v1/watches/generate", {

@@ -6,6 +6,7 @@ export interface FirstWatchContext {
     sections: Record<string, unknown>;
     ai_draft: string | null;
   } | null;
+  openDims: string | null;
 }
 
 export function buildFirstWatchPrompt(ctx: FirstWatchContext): string {
@@ -74,6 +75,8 @@ You MUST return a valid JSON object with these exact keys. Every value must be a
   "operating_posture": "...",
   "closing_bearing": "..."
 }
+
+${ctx.openDims ? `## Open DIMs (Decisions, Ideas, Micro-tasks)\nThese are the user's currently open DIMs from the DIM Ledger. Reference high-priority items in the open_dims and top_priorities sections where relevant. Items marked with high scores (>70) deserve special attention.\n\n${ctx.openDims}` : ""}
 
 ## User Context
 ${ctx.context}`;

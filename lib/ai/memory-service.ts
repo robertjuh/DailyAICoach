@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/client";
-import type { MemoryCat } from "@prisma/client";
+import type { MemoryCat, DimCategory } from "@prisma/client";
+import { analyzeDim } from "./priority-engine";
 
 const MEMORY_EXPIRY: Record<MemoryCat, number | null> = {
   GOAL: null, // never expires
@@ -62,6 +63,42 @@ export async function extractAndSaveMemories(
     const content = match[2].trim();
 
     await saveMemory(userId, category, content, "chat");
+    saved.push({ category, content });
+  }
+
+  return saved;
+}
+
+/**
+ * Parses [DIM: CATEGORY: content] tags from AI responses and saves them.
+ * Example: [DIM: IDEA: Switch to a standing desk]
+ */
+export async function extractAndSaveDims(
+  userId: string,
+  responseText: string
+) {
+  const dimRegex = /\[DIM:\s*(DECISION|IDEA|MICRO_TASK):\s*(.+?)\]/g;
+  let match: RegExpExecArray | null;
+  const saved: { category: DimCategory; content: string }[] = [];
+
+  while ((match = dimRegex.exec(responseText)) !== null) {
+    const category = match[1] as DimCategory;
+    const content = match[2].trim();
+
+    const dim = await prisma.dim.create({
+      data: {
+        user_id: userId,
+        content,
+        category,
+        source: "chat",
+      },
+    });
+
+    // Run Priority Engine in background
+    analyzeDim(dim.id, userId).catch((err) =>
+      console.error("Priority Engine error for chat DIM:", err)
+    );
+
     saved.push({ category, content });
   }
 

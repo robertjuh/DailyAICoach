@@ -13,7 +13,7 @@
 
 Dit document beschrijft de technische architectuur, technologiekeuzes, database-ontwerp, API-structuur, AI-integratie en deployment-strategie voor de **Dagelijkse Routine App**.
 
-- **Primary AI:** OpenAI API (GPT-4o)
+- **Primary AI:** OpenAI API (gpt-5.4-mini)
 - **Toekomstige uitbreiding:** Anthropic Claude API voor aanvullende functionaliteit
 
 ---
@@ -29,7 +29,7 @@ Dit document beschrijft de technische architectuur, technologiekeuzes, database-
 | Backend | Next.js API Routes (serverless) — later uitbreidbaar naar aparte Node.js service |
 | Database | PostgreSQL via Supabase (auth + realtime + storage inbegrepen) |
 | ORM | Prisma |
-| AI — primair | OpenAI API (GPT-4o) |
+| AI — primair | OpenAI API (gpt-5.4-mini) |
 | AI — toekomst | Anthropic Claude API (claude-sonnet-4-6) voor aanvullende functionaliteit |
 | Auth | Supabase Auth (e-mail/wachtwoord + Google OAuth + Apple OAuth) |
 | Push notif. | Web Push API (browser) + Firebase Cloud Messaging (iOS/Android via PWA) |

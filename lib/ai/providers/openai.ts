@@ -1,15 +1,16 @@
 import OpenAI from "openai";
 import type { AIProvider, ChatMessage, ChatOptions } from "./base";
+import { getOpenAIModel } from "../model-config";
 
 export class OpenAIProvider implements AIProvider {
   private client: OpenAI;
   private model: string;
 
-  constructor(model = "gpt-4o") {
+  constructor(model?: string) {
     this.client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
-    this.model = model;
+    this.model = model ?? getOpenAIModel();
   }
 
   async chat(
@@ -22,7 +23,7 @@ export class OpenAIProvider implements AIProvider {
         role: m.role as "user" | "assistant" | "system",
         content: m.content,
       })),
-      max_tokens: options?.maxTokens ?? 1024,
+      max_completion_tokens: options?.maxTokens ?? 1024,
       temperature: options?.temperature ?? 0.7,
       stream: options?.stream ?? false,
     };

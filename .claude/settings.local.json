@@ -46,7 +46,10 @@
       "Bash(node -e \"console.log\\(require\\(''zod/package.json''\\).version\\)\")",
       "Bash(npx next:*)",
       "Bash(find /root/devprojects/DailyAICoach/app/api/v1/users -type f -name *.ts)",
-      "Bash(find /root/devprojects/DailyAICoach/lib/db/queries -type f -name *.ts)"
+      "Bash(find /root/devprojects/DailyAICoach/lib/db/queries -type f -name *.ts)",
+      "Bash(node -e \"const p = require\\(''@prisma/client''\\); console.log\\(Object.keys\\(p\\).filter\\(k => k.startsWith\\(''P''\\)\\).join\\('', ''\\)\\)\")",
+      "Bash(grep -E \"\\\\.md$\")",
+      "Bash(ls /root/devprojects/DailyAICoach/app/\\\\\\(dashboard\\\\\\)/)"
     ]
   }
 }

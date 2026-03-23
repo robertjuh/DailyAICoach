@@ -199,6 +199,28 @@ Each user story follows the format: As a [role] I want [action] so that [value].
 
 ---
 
+### US10: DIM System & Priority Engine
+
+*As a user I want to quickly capture Decisions, Ideas and Micro-tasks (DIMs) at any moment during my day so that fleeting thoughts have a home, get automatically analysed and triaged, and flow into my watches without breaking my focus*
+
+**Philosophy:** "Observe the squirrel. Don't chase the squirrel." — A DIM captures the thought so you can return to work immediately. The Priority Engine evaluates it for you. You review and decide during Night Watch.
+
+| # | Task | Definition of Done |
+|---|---|---|
+| 1 | Create `Dim` database model with fields: id, user_id, content, category (DECISION / IDEA / MICRO_TASK), status (open / completed / deferred / delegated / deleted), priority_score (0–100), recommendation (DO / DEFER / DELEGATE / DELETE), ai_reasoning, source (manual / chat / watch), related_goal_id (optional), created_at, completed_at | Migration runs successfully; model is accessible via Prisma client; all enums and constraints are enforced |
+| 2 | Create `PriorityFilter` model with fields: id, user_id, name, weight (1–10), is_active. Seed four default filters per user on onboarding: Revenue Impact, Urgency, Alignment, Effort | Default filters are created during onboarding; user can view their active filters; weights are stored and retrievable |
+| 3 | Build `/dims` dashboard page with frictionless capture: single input bar at top, press Enter to save a new DIM instantly. List shows open DIMs grouped by category with priority score badge, recommendation chip, and one-tap triage buttons (Do / Defer / Delegate / Delete). Tabs or filter for Open / Completed / All | Page loads open DIMs; user can add a DIM in <3 seconds; triage action updates status immediately; completed DIMs are accessible via tab |
+| 4 | Build DIM detail view: tap a DIM to see full AI reasoning, priority breakdown per filter, creation source, and related goal. Allow editing content, category, and manual status override | Detail view shows all fields; edits persist; AI reasoning is displayed clearly |
+| 5 | Build Priority Engine AI endpoint (`POST /api/v1/dims/analyze`): accepts a DIM, evaluates it against the user's active priority filters and current goals, returns a score (0–100), recommendation (Do / Defer / Delegate / Delete), and reasoning. Runs automatically when a new DIM is created | New DIMs receive a priority score and recommendation within 10 seconds of creation; reasoning references the user's specific filters and goals |
+| 6 | Build DIM API routes: `GET /api/v1/dims` (list with status/category filters), `POST /api/v1/dims` (create + auto-trigger Priority Engine), `PATCH /api/v1/dims/[id]` (update status, content, category), `DELETE /api/v1/dims/[id]` (hard delete) | All CRUD operations work; list supports filtering by status and category; create triggers automatic Priority Engine analysis |
+| 7 | Integrate DIM capture into AI coach chat: when the user mentions a DIM-like thought (idea, decision, task), the AI coach detects it and offers to save it as a DIM. On confirmation, the DIM is created via the API with source = "chat" | AI detects DIM-worthy messages in >70% of obvious cases; user is prompted with a confirmation; saved DIM appears in the /dims page |
+| 8 | Integrate DIMs into Night Watch generation: pull all open DIMs (with scores and recommendations) from the database into the Night Watch prompt. Completed DIMs from today appear in the wins/completed section. AI references specific DIMs by content in its reflection | Night Watch draft includes real DIM data from the database; completed DIMs are celebrated; open DIMs show AI-generated triage recommendations |
+| 9 | Integrate DIMs into First Watch generation: pull carried-forward open DIMs (status = open or deferred) into the First Watch prompt. AI references them in the Open DIMs and Top Priorities sections where relevant | First Watch draft surfaces open DIMs; high-priority DIMs (score > 70) are highlighted; deferred DIMs from previous days reappear with context |
+| 10 | Allow user to customise Priority Engine filters: settings page or modal where user can rename filters, adjust weights (1–10), add new filters, or deactivate defaults. Changes take effect on next Priority Engine analysis | User can modify all four default filters; can add up to 3 custom filters; weight changes are reflected in subsequent DIM analyses |
+| 11 | Add DIM counters to navigation: sidebar and mobile nav show a badge with the count of open DIMs, encouraging regular triage | Badge shows correct count; updates in real-time after triage actions; disappears when no open DIMs remain |
+
+---
+
 ## 7. Open Questions
 
 The following questions require further exploration:

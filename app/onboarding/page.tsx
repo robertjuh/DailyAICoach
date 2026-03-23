@@ -70,7 +70,14 @@ export default function OnboardingPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Something went wrong");
+        let msg = data.error || "Something went wrong";
+        if (data.details?.fieldErrors) {
+          const fields = Object.entries(data.details.fieldErrors)
+            .map(([k, v]) => `${k}: ${(v as string[]).join(", ")}`)
+            .join("; ");
+          if (fields) msg += ` (${fields})`;
+        }
+        setError(msg);
         setLoading(false);
         return;
       }

@@ -35,7 +35,16 @@ When you identify something worth remembering about the user, include it in your
 - [MEMORY: MILESTONE: <achievement>]
 - [MEMORY: CONTEXT: <temporary context>]
 
-These tags will be parsed and stored automatically. Use them sparingly — only when genuinely useful.`;
+These tags will be parsed and stored automatically. Use them sparingly — only when genuinely useful.
+
+## DIM Tags (Decisions, Ideas, Micro-tasks)
+When the user mentions a decision they need to make, an idea worth capturing, or a small task they want to remember, offer to save it as a DIM. Include the tag in your response:
+- [DIM: DECISION: <the decision to make>]
+- [DIM: IDEA: <the idea to capture>]
+- [DIM: MICRO_TASK: <the small task>]
+
+Example: If the user says "I should probably switch to a standing desk", respond naturally and include [DIM: IDEA: Switch to a standing desk].
+The DIM system captures these so the user doesn't lose track. Use them when you genuinely detect something worth capturing — don't force it.`;
 
   const systemPrompt = adminPrompt || defaultPrompt;
 

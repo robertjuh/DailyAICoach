@@ -98,6 +98,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Seed default Priority Engine filters
+    const defaultFilters = [
+      { name: "Urgency", weight: 8 },
+      { name: "Alignment", weight: 7 },
+      { name: "Effort", weight: 5 },
+      { name: "Impact", weight: 6 },
+    ];
+
+    await prisma.priorityFilter.createMany({
+      data: defaultFilters.map((f) => ({
+        user_id: user.id,
+        name: f.name,
+        weight: f.weight,
+      })),
+      skipDuplicates: true,
+    });
+
     return NextResponse.json(
       { data: { user } },
       { status: 200 }

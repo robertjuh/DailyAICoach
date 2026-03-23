@@ -2,18 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BarChart3, Bot, Sun, Moon } from "lucide-react";
+import { Home, Bot, Sun, Moon, Lightbulb } from "lucide-react";
+import { useDimCount } from "@/lib/hooks/use-dim-count";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/first-watch", label: "Morning", icon: Sun },
   { href: "/night-watch", label: "Evening", icon: Moon },
+  { href: "/dims", label: "DIMs", icon: Lightbulb },
   { href: "/chat", label: "Coach", icon: Bot },
-  { href: "/progress", label: "Progress", icon: BarChart3 },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
+  const dimCount = useDimCount();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background md:hidden">
@@ -21,11 +23,12 @@ export function Navbar() {
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
+          const showBadge = item.href === "/dims" && dimCount > 0;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 px-3 py-1 text-xs transition-colors ${
+              className={`relative flex flex-col items-center gap-1 px-3 py-1 text-xs transition-colors ${
                 isActive
                   ? "text-primary font-medium"
                   : "text-muted-foreground hover:text-foreground"
@@ -33,6 +36,11 @@ export function Navbar() {
             >
               <Icon className="h-5 w-5" />
               <span>{item.label}</span>
+              {showBadge && (
+                <span className="absolute -top-1 right-0 bg-primary text-primary-foreground text-[10px] font-medium w-4 h-4 rounded-full flex items-center justify-center">
+                  {dimCount}
+                </span>
+              )}
             </Link>
           );
         })}

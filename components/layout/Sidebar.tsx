@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ListChecks, BarChart3, MessageCircle, Bot, LogOut, Sun, Moon } from "lucide-react";
+import { Home, ListChecks, BarChart3, MessageCircle, Bot, LogOut, Sun, Moon, Lightbulb } from "lucide-react";
 import { createBrowserClient } from "@/lib/auth/supabase-browser";
 import { useRouter } from "next/navigation";
+import { useDimCount } from "@/lib/hooks/use-dim-count";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/first-watch", label: "First Watch", icon: Sun },
   { href: "/night-watch", label: "Night Watch", icon: Moon },
+  { href: "/dims", label: "DIM Ledger", icon: Lightbulb },
   { href: "/chat", label: "AI Coach", icon: Bot },
   { href: "/routine", label: "My Routine", icon: ListChecks },
   { href: "/progress", label: "Progress", icon: BarChart3 },
@@ -19,6 +21,7 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const dimCount = useDimCount();
 
   async function handleSignOut() {
     const supabase = createBrowserClient();
@@ -39,6 +42,7 @@ export function Sidebar() {
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
+            const showBadge = item.href === "/dims" && dimCount > 0;
             return (
               <Link
                 key={item.href}
@@ -51,6 +55,11 @@ export function Sidebar() {
               >
                 <Icon className="h-5 w-5" />
                 {item.label}
+                {showBadge && (
+                  <span className="ml-auto bg-primary text-primary-foreground text-xs font-medium px-1.5 py-0.5 rounded-full">
+                    {dimCount}
+                  </span>
+                )}
               </Link>
             );
           })}

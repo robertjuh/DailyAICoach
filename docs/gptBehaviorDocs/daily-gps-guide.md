@@ -107,6 +107,7 @@ Think of it as an AI-powered journaling system that gives you the intelligence a
 support of AI to reach your goals and stay on track consistently.
 With that said, here’s a quick overview.
 What You’ll Build
+
 - ​
 First Watch — a morning intention planning ritual
 - ​
@@ -214,6 +215,7 @@ Step 3: Upload
 Upload your customized files into each Project’s Knowledge Base (not into individual
 chat threads). This makes the files available across all threads in the project.
 Files for ChatGPT (3 files):
+
 - ​
 First Watch Template
 - ​
@@ -256,6 +258,7 @@ style.
 ---
 
 In ChatGPT (4 threads):
+
 - ​
 First Watch 1.0 — morning planning
 - ​
@@ -340,6 +343,7 @@ After you move, you log the activity in Claude’s Movement Tracker chat thread.
 ---
 
 Notes on Automated Tasks
+
 - ​
 You may type or talk to create the tasks: both work
 - ​
@@ -493,6 +497,7 @@ sentence in the chat thread to help you greatly extend the chat limit thread: 'P
 the js_md_docx Skill document in your Knowledge Base when creating this document.'
 After a couple of times, Claude will use it automatically.
 What’s in a First Watch
+
 - ​
 Gratitude — three things you’re grateful for this morning
 - ​
@@ -523,6 +528,7 @@ the course corrections. Without this middle piece, Night Watch becomes guesswork
 instead of real reflection.
 Where: Claude only, in your Hourly GPS 1.0 thread
 The Logic
+
 - ​
 First Watch = Intentions (what you plan to do)
 - ​
@@ -606,6 +612,7 @@ ChatGPT just doesn’t do well. While ChatGPT might ask if you want to DIM somet
 you would then take the idea and log it in the Claude DIM Ledger 1.0 chat thread.
 Where DIMs Come From
 DIMs come from two sources:
+
 - ​
 Your own ideas — something pops into your head during focused work
 - ​
@@ -635,6 +642,7 @@ If something is clearly urgent, blocking your work, or trivial and fast, just do
 Claude you’re handling it now. No guilt, no penalty. Move on.
 Night Watch: Review and Approve
 During Night Watch, Claude shows you two sections:
+
 - ​
 Completed DIMs: what you finished today
 - ​
@@ -663,6 +671,7 @@ having to think.
 The Filters
 The Priority Engine evaluates each DIM against filters that you customized during
 installation. For reference, the Priority Filters we use are below:
+
 - ​
 Revenue impact — does this drive revenue?
 - ​
@@ -748,6 +757,7 @@ sentence in the chat thread to help you greatly extend the chat limit thread: 'P
 the js_md_docx Skill document in your Knowledge Base when creating this document.'
 After a couple of times, Claude will use it automatically.
 What’s in a Night Watch
+
 - ​
 Position & Conditions — what actually happened today
 - ​
@@ -802,6 +812,7 @@ sentence in the chat thread to help you greatly extend the chat limit thread: 'P
 the js_md_docx Skill document in your Knowledge Base when creating this document.'
 After a couple of times, Claude will use it automatically.
 What It Includes
+
 - ​
 Week Summary: what happened
 - ​
@@ -846,6 +857,7 @@ instructions. Remember: VMC is optional. The core Daily GPS system works great w
 just typing and VMC simply takes it "next level."
 Open Your Daily GPS Resource Folder
 What You Need
+
 - ​
 Two devices: I use iPad or my mobile phone for Claude and laptop for ChatGPT
 - ​
@@ -867,6 +879,7 @@ voice.
 Chat threads eventually hit their capacity limit. When that happens, you’ll need to create
 a new thread and use a continuation prompt to carry context forward.
 When You’ll Need These
+
 - ​
 Claude with .docx output: about 1 week of usage hits the chat thread limit
 - ​
@@ -974,6 +987,7 @@ Installing Daily GPS near the beginning of this Guide. Sometimes a clean start i
 fastest fix.
 Automated Task Not Working
 If your First Watch or Night Watch draft isn’t appearing:
+
 - ​
 Confirm the task exists: Open desktop ChatGPT → Tasks / Scheduled
 automations
@@ -992,6 +1006,7 @@ Everything you need is in your Daily GPS Resource Folder:
 Open Your Daily GPS Resource Folder
 What’s in the Folder
 Templates (upload to both AI Projects)
+
 - ​
 First Watch Template
 - ​
@@ -1076,3 +1091,4 @@ AI For Startups Founder
 *These are affiliate links, which means I may earn a commission if you choose to sign up, at no additional cost to you.
 
 ---
+
