@@ -6,6 +6,7 @@ import { extractAndSaveMemories, extractAndSaveDims } from "@/lib/ai/memory-serv
 import { prisma } from "@/lib/db/client";
 import OpenAI from "openai";
 import { getOpenAIModel } from "@/lib/ai/model-config";
+import { getUserToday } from "@/lib/date-utils";
 import { z } from "zod";
 
 const chatInputSchema = z.object({
@@ -37,8 +38,11 @@ export async function POST(request: NextRequest) {
     const systemPrompt = buildSystemPrompt(context, adminPrompt);
 
     // 2. Get or create today's conversation
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { timezone: true },
+    });
+    const today = getUserToday(user?.timezone ?? "UTC");
 
     let conversation = await prisma.conversation.findUnique({
       where: { user_id_date: { user_id: userId, date: today } },

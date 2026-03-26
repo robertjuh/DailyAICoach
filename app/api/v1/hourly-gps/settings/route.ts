@@ -1,30 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, AuthError } from "@/lib/auth/middleware";
-import { createLogSchema } from "@/lib/validators/logs";
-import { createLog, getLogsForDate } from "@/lib/db/queries/logs";
+import { updateGpsSettingsSchema } from "@/lib/validators/hourly-gps";
 import { prisma } from "@/lib/db/client";
-import { getUserToday } from "@/lib/date-utils";
 
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await requireAuth(request);
 
-    const { searchParams } = new URL(request.url);
-    const dateStr = searchParams.get("date");
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        hourly_gps_enabled: true,
+        hourly_gps_interval: true,
+        hourly_gps_start_time: true,
+        hourly_gps_end_time: true,
+      },
+    });
 
-    let date: Date;
-    if (dateStr) {
-      date = new Date(dateStr + "T00:00:00.000Z");
-    } else {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { timezone: true },
-      });
-      date = getUserToday(user?.timezone ?? "UTC");
-    }
-
-    const logs = await getLogsForDate(userId, date);
-    return NextResponse.json({ data: logs }, { status: 200 });
+    return NextResponse.json({ data: user }, { status: 200 });
   } catch (error) {
     if (error instanceof AuthError) {
       return NextResponse.json(
@@ -39,12 +32,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function PATCH(request: NextRequest) {
   try {
     const { userId } = await requireAuth(request);
 
     const body = await request.json();
-    const parsed = createLogSchema.safeParse(body);
+    const parsed = updateGpsSettingsSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -53,15 +46,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const date = new Date(parsed.data.date + "T00:00:00.000Z");
-
-    const log = await createLog({
-      user_id: userId,
-      routine_item_id: parsed.data.routine_item_id,
-      date,
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: parsed.data,
+      select: {
+        hourly_gps_enabled: true,
+        hourly_gps_interval: true,
+        hourly_gps_start_time: true,
+        hourly_gps_end_time: true,
+      },
     });
 
-    return NextResponse.json({ data: log }, { status: 200 });
+    return NextResponse.json({ data: user }, { status: 200 });
   } catch (error) {
     if (error instanceof AuthError) {
       return NextResponse.json(

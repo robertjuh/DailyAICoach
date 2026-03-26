@@ -221,6 +221,29 @@ Each user story follows the format: As a [role] I want [action] so that [value].
 
 ---
 
+### US11: Hourly GPS — focus check-ins throughout the day
+
+*As a user I want to do optional, quick check-ins throughout my workday so that I stay aware of where my time and focus are going — and so my watches and DIMs are informed by what actually happened during the day*
+
+**Philosophy:** Hourly GPS is tracking, not managing. It observes the seas, it doesn't judge the sailor. Check-ins are brief (10–30 seconds), entirely optional, and non-intrusive. Missing a check-in is never a problem. The value compounds: the more check-ins a user does, the richer their Night Watch reflection and tomorrow's First Watch become.
+
+**Key principle:** The user should see a gentle notification that their hourly check-in is ready, but must never feel spammed. Hourly GPS remembers things throughout the day that flow into First Watch, Night Watch, and open DIMs — it is the connective tissue of the daily loop.
+
+| # | Task | Definition of Done |
+|---|---|---|
+| 1 | Create `HourlyCheckin` database model with fields: id, user_id, date (Date), timestamp (DateTime), current_activity (string), next_activity (string, optional), energy (1–5, optional), drift_note (string, optional), win (string, optional), source (manual / notification), created_at | Migration runs successfully; model is accessible via Prisma client; multiple check-ins per day are supported |
+| 2 | Build Hourly GPS API routes: `POST /api/v1/hourly-gps` (create check-in + auto-detect DIMs in text), `GET /api/v1/hourly-gps/today` (list today's check-ins), `GET /api/v1/hourly-gps/summary` (AI-generated summary of today's check-ins for use in watch generation) | All CRUD operations work; creating a check-in takes max 3 seconds; today endpoint returns check-ins in chronological order; summary endpoint returns a concise AI-generated narrative |
+| 3 | Build Hourly GPS page/modal: minimal UI optimised for speed — single text input ("What are you working on right now?"), optional fields for energy (slider), drift note, and win. Submit with Enter. Show today's check-in timeline below the input | User can complete a check-in in <30 seconds; timeline shows all today's entries with timestamps; page works on mobile and desktop |
+| 4 | Implement AI pattern detection on check-ins: after each check-in, run lightweight analysis to detect drift (topic changed unexpectedly), identify focus streaks, and spot DIM-worthy mentions. If a DIM is detected, suggest capturing it without breaking flow | AI flags drift when activity changes unexpectedly between consecutive check-ins; DIM suggestions appear inline; user can accept/dismiss with one tap |
+| 5 | Implement gentle notification system: at user-configurable intervals (default: every 60 minutes during working hours), show a non-blocking in-app notification ("What are you working on?"). Notification disappears after 30 seconds if not tapped. No sound by default. User can configure: interval (30m/60m/90m/120m), active hours (e.g. 09:00–17:00), and enable/disable entirely | Notifications appear at configured intervals; they auto-dismiss; user can snooze or disable from the notification itself; settings persist; no notifications outside active hours |
+| 6 | Integrate Hourly GPS data into Night Watch generation: pass today's check-in summary (activities, drift patterns, wins, energy curve) into the Night Watch AI prompt so the reflection is grounded in actual data from the day | Night Watch draft references specific activities and patterns from Hourly GPS; focused hours section is pre-populated from check-in data; drift analysis uses real check-in data |
+| 7 | Integrate Hourly GPS data into First Watch generation: pass yesterday's check-in patterns (peak focus times, recurring drift triggers, energy curve) into the First Watch AI prompt so morning planning accounts for observed behaviour | First Watch draft references patterns from prior day's check-ins; drift watch section uses actual drift data; operating posture reflects observed energy patterns |
+| 8 | Build check-in timeline view: on the Hourly GPS page, show a visual timeline of today's check-ins with activity labels, energy dots, drift flags, and DIM captures. Tapping an entry expands it to show details | Timeline renders chronologically; colour-coded by energy level; drift flags are visually distinct; DIM captures link to the DIM detail view |
+| 9 | Add Hourly GPS indicator to navigation: show a subtle dot or indicator when a check-in is "due" (based on configured interval since last check-in). Indicator is gentle — not a badge with count, not red, not urgent | Indicator appears when interval has elapsed since last check-in; disappears after check-in or after configured auto-dismiss; does not compete visually with DIM badge or watch notifications |
+| 10 | Add user settings for Hourly GPS: enable/disable toggle, interval selection, active hours window, notification style (in-app only / push / off). Defaults: enabled, 60-minute interval, 09:00–17:00, in-app only | Settings page shows all Hourly GPS options; changes take effect immediately; defaults are applied for new users; disabled state stops all notifications and hides nav indicator |
+
+---
+
 ## 7. Open Questions
 
 The following questions require further exploration:

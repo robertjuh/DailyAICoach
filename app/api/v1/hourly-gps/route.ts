@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, AuthError } from "@/lib/auth/middleware";
-import { createCheckinSchema } from "@/lib/validators/checkins";
+import { createHourlyCheckinSchema } from "@/lib/validators/hourly-gps";
 import { prisma } from "@/lib/db/client";
 import { getUserToday } from "@/lib/date-utils";
 
@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const { userId } = await requireAuth(request);
 
     const body = await request.json();
-    const parsed = createCheckinSchema.safeParse(body);
+    const parsed = createHourlyCheckinSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -24,28 +24,31 @@ export async function POST(request: NextRequest) {
     });
     const today = getUserToday(user?.timezone ?? "UTC");
 
-    // Check if already checked in today
-    const existing = await prisma.checkIn.findUnique({
-      where: { user_id_date: { user_id: userId, date: today } },
-    });
-
-    if (existing) {
-      return NextResponse.json(
-        { error: "Already checked in today", code: "DUPLICATE" },
-        { status: 409 }
-      );
-    }
-
-    const checkin = await prisma.checkIn.create({
+    const checkin = await prisma.hourlyCheckin.create({
       data: {
         user_id: userId,
         date: today,
+        time: new Date(),
+        working_on: parsed.data.working_on,
+        drift_note: parsed.data.drift_note,
+        win: parsed.data.win,
         energy: parsed.data.energy,
-        focus: parsed.data.focus,
-        mood: parsed.data.mood,
-        note: parsed.data.note,
+        next_plan: parsed.data.next_plan,
       },
     });
+
+    // If a DIM was captured, create it as a new DIM
+    if (parsed.data.dim_capture) {
+      await prisma.dim.create({
+        data: {
+          user_id: userId,
+          content: parsed.data.dim_capture,
+          category: "IDEA",
+          status: "OPEN",
+          source: "hourly-gps",
+        },
+      });
+    }
 
     return NextResponse.json({ data: checkin }, { status: 200 });
   } catch (error) {

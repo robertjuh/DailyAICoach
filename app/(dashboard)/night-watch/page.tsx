@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, Check, Pencil, Moon, Plus, X } from "lucide-react";
+import { Loader2, Check, Pencil, Moon, Plus, X, RotateCcw } from "lucide-react";
+import { WatchChat, type ChatMessage } from "@/components/watch/WatchChat";
 
 interface FocusedHour {
   time_block: string;
@@ -79,6 +80,70 @@ const emptySections: NightWatchSections = {
   closing_reflection: "",
 };
 
+function normalizeSections(raw: Record<string, unknown>): NightWatchSections {
+  const asArr = (v: unknown, fallback: string[]): string[] =>
+    Array.isArray(v) ? v.map(String) : fallback;
+  const asStr = (v: unknown, fallback = ""): string =>
+    typeof v === "string" ? v : fallback;
+  const asNum = (v: unknown, fallback = 0): number =>
+    typeof v === "number" ? v : fallback;
+  const asObj = (v: unknown): Record<string, unknown> =>
+    v && typeof v === "object" && !Array.isArray(v)
+      ? (v as Record<string, unknown>)
+      : {};
+
+  const br = asObj(raw.bearings);
+  const fd = asObj(raw.friction_and_drift);
+  const we = asObj(raw.wake_effect);
+
+  const focusedHours: FocusedHour[] = Array.isArray(raw.focused_hours)
+    ? raw.focused_hours.map((fh: unknown) => {
+        const o = asObj(fh);
+        return {
+          time_block: asStr(o.time_block),
+          activity: asStr(o.activity),
+          hours: asNum(o.hours),
+        };
+      })
+    : emptySections.focused_hours;
+
+  const openDims: OpenDim[] = Array.isArray(raw.open_dims)
+    ? raw.open_dims.map((d: unknown) => {
+        const o = asObj(d);
+        return {
+          item: asStr(o.item),
+          recommendation: asStr(o.recommendation, "Do"),
+        };
+      })
+    : emptySections.open_dims;
+
+  return {
+    theme: asStr(raw.theme),
+    bearings: {
+      key_work_completed: asStr(br.key_work_completed),
+      work_not_finished: asStr(br.work_not_finished),
+      unexpected_events: asStr(br.unexpected_events),
+    },
+    focused_hours: focusedHours,
+    wins: asArr(raw.wins, emptySections.wins),
+    friction_and_drift: {
+      attention_wandered: asStr(fd.attention_wandered),
+      time_leaked: asStr(fd.time_leaked),
+      patterns: asStr(fd.patterns),
+    },
+    emotional_weather: asStr(raw.emotional_weather),
+    movement: asStr(raw.movement),
+    completed_dims: asArr(raw.completed_dims, emptySections.completed_dims),
+    open_dims: openDims,
+    wake_effect: {
+      carry_forward_tasks: asArr(we.carry_forward_tasks, emptySections.wake_effect.carry_forward_tasks),
+      energy_state: asStr(we.energy_state),
+      open_loops: asArr(we.open_loops, emptySections.wake_effect.open_loops),
+    },
+    closing_reflection: asStr(raw.closing_reflection),
+  };
+}
+
 export default function NightWatchPage() {
   const [watch, setWatch] = useState<Watch | null>(null);
   const [sections, setSections] = useState<NightWatchSections>(emptySections);
@@ -86,7 +151,6 @@ export default function NightWatchPage() {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [userInput, setUserInput] = useState("");
 
   const loadWatch = useCallback(async () => {
     try {
@@ -95,7 +159,7 @@ export default function NightWatchPage() {
         const { data } = await res.json();
         if (data.nightWatch) {
           setWatch(data.nightWatch);
-          setSections(data.nightWatch.sections as NightWatchSections);
+          setSections(normalizeSections(data.nightWatch.sections));
         }
       }
     } catch (err) {
@@ -109,18 +173,7 @@ export default function NightWatchPage() {
     loadWatch();
   }, [loadWatch]);
 
-  async function generateWatch() {
-
-    console.log("Generating watch");
-    console.log("User input:", userInput);
-    console.log("Type:", "NIGHT_WATCH");
-    console.log("Body:", {
-      type: "NIGHT_WATCH",
-      userInput: userInput || undefined,
-    });
-    
-    
-    
+  async function generateWatch(chatMessages?: ChatMessage[]) {
     setGenerating(true);
     try {
       const res = await fetch("/api/v1/watches/generate", {
@@ -128,13 +181,13 @@ export default function NightWatchPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "NIGHT_WATCH",
-          userInput: userInput || undefined,
+          chatMessages: chatMessages ?? undefined,
         }),
       });
       if (res.ok) {
         const { data } = await res.json();
         setWatch(data);
-        setSections(data.sections as NightWatchSections);
+        setSections(normalizeSections(data.sections));
         setEditing(true);
       }
     } catch (err) {
@@ -194,36 +247,22 @@ export default function NightWatchPage() {
     );
   }
 
-  // No watch yet — show generate prompt
+  // No watch yet — show conversational phase
   if (!watch) {
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-4">
         <div className="flex items-center gap-3">
           <Moon className="h-7 w-7 text-indigo-400" />
           <h1 className="text-2xl font-bold">Night Watch</h1>
         </div>
 
         <Card>
-          <CardContent className="p-6 space-y-4">
-            <p className="text-muted-foreground">
-              Close your day with a structured reflection. The AI will generate
-              your Night Watch based on today&apos;s First Watch, your activity,
-              and check-in data.
-            </p>
-            <Textarea
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              placeholder="Optional: share how your day went, what you accomplished, or what's on your mind..."
-              rows={3}
+          <CardContent className="p-6">
+            <WatchChat
+              watchType="NIGHT_WATCH"
+              onGenerate={generateWatch}
+              generating={generating}
             />
-            <Button onClick={generateWatch} disabled={generating}>
-              {generating ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4 mr-2" />
-              )}
-              Generate Night Watch
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -245,18 +284,19 @@ export default function NightWatchPage() {
           </Badge>
         </div>
         <div className="flex gap-2">
-          {isConfirmed && !editing && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setEditing(true)}
-            >
-              <Pencil className="h-4 w-4 mr-1" />
-              Edit
-            </Button>
-          )}
           {!isConfirmed && !editing && (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setWatch(null);
+                  setSections(emptySections);
+                }}
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Redo
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -271,13 +311,23 @@ export default function NightWatchPage() {
               </Button>
             </>
           )}
+          {isConfirmed && !editing && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditing(true)}
+            >
+              <Pencil className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+          )}
           {isEditing && (
             <>
               <Button variant="outline" size="sm" onClick={saveDraft} disabled={saving}>
                 Save Draft
               </Button>
               <Button size="sm" onClick={confirmWatch} disabled={saving}>
-                <Check className="h-4 w-4 mr-1" />
+                {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
                 Confirm
               </Button>
             </>
@@ -291,9 +341,7 @@ export default function NightWatchPage() {
           {isEditing ? (
             <Input
               value={sections.theme}
-              onChange={(e) =>
-                setSections((prev) => ({ ...prev, theme: e.target.value }))
-              }
+              onChange={(e) => setSections((prev) => ({ ...prev, theme: e.target.value }))}
               placeholder="A short phrase capturing today's essence"
               className="text-center italic"
             />
@@ -319,9 +367,7 @@ export default function NightWatchPage() {
             ] as const
           ).map(([key, label]) => (
             <div key={key}>
-              <label className="text-xs font-medium text-muted-foreground">
-                {label}
-              </label>
+              <label className="text-xs font-medium text-muted-foreground">{label}</label>
               {isEditing ? (
                 <Input
                   value={sections.bearings[key]}
@@ -355,10 +401,7 @@ export default function NightWatchPage() {
                     onChange={(e) => {
                       const updated = [...sections.focused_hours];
                       updated[i] = { ...updated[i], time_block: e.target.value };
-                      setSections((prev) => ({
-                        ...prev,
-                        focused_hours: updated,
-                      }));
+                      setSections((prev) => ({ ...prev, focused_hours: updated }));
                     }}
                     placeholder="9:00-11:30"
                     className="w-32"
@@ -368,10 +411,7 @@ export default function NightWatchPage() {
                     onChange={(e) => {
                       const updated = [...sections.focused_hours];
                       updated[i] = { ...updated[i], activity: e.target.value };
-                      setSections((prev) => ({
-                        ...prev,
-                        focused_hours: updated,
-                      }));
+                      setSections((prev) => ({ ...prev, focused_hours: updated }));
                     }}
                     placeholder="Activity"
                     className="flex-1"
@@ -381,14 +421,8 @@ export default function NightWatchPage() {
                     value={fh.hours || ""}
                     onChange={(e) => {
                       const updated = [...sections.focused_hours];
-                      updated[i] = {
-                        ...updated[i],
-                        hours: parseFloat(e.target.value) || 0,
-                      };
-                      setSections((prev) => ({
-                        ...prev,
-                        focused_hours: updated,
-                      }));
+                      updated[i] = { ...updated[i], hours: parseFloat(e.target.value) || 0 };
+                      setSections((prev) => ({ ...prev, focused_hours: updated }));
                     }}
                     placeholder="Hrs"
                     className="w-20"
@@ -400,9 +434,7 @@ export default function NightWatchPage() {
                     onClick={() =>
                       setSections((prev) => ({
                         ...prev,
-                        focused_hours: prev.focused_hours.filter(
-                          (_, idx) => idx !== i
-                        ),
+                        focused_hours: prev.focused_hours.filter((_, idx) => idx !== i),
                       }))
                     }
                   >
@@ -416,10 +448,7 @@ export default function NightWatchPage() {
                 onClick={() =>
                   setSections((prev) => ({
                     ...prev,
-                    focused_hours: [
-                      ...prev.focused_hours,
-                      { time_block: "", activity: "", hours: 0 },
-                    ],
+                    focused_hours: [...prev.focused_hours, { time_block: "", activity: "", hours: 0 }],
                   }))
                 }
               >
@@ -430,10 +459,7 @@ export default function NightWatchPage() {
           ) : (
             <div className="space-y-1">
               {sections.focused_hours.map((fh, i) => (
-                <div
-                  key={i}
-                  className="flex justify-between text-sm py-1 px-2 rounded bg-muted/50"
-                >
+                <div key={i} className="flex justify-between text-sm py-1 px-2 rounded bg-muted/50">
                   <span className="text-muted-foreground">{fh.time_block}</span>
                   <span>{fh.activity}</span>
                   <span className="text-muted-foreground">{fh.hours}h</span>
@@ -475,9 +501,7 @@ export default function NightWatchPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() =>
-                setSections((prev) => ({ ...prev, wins: [...prev.wins, ""] }))
-              }
+              onClick={() => setSections((prev) => ({ ...prev, wins: [...prev.wins, ""] }))}
             >
               + Add Win
             </Button>
@@ -499,26 +523,19 @@ export default function NightWatchPage() {
             ] as const
           ).map(([key, label]) => (
             <div key={key}>
-              <label className="text-xs font-medium text-muted-foreground">
-                {label}
-              </label>
+              <label className="text-xs font-medium text-muted-foreground">{label}</label>
               {isEditing ? (
                 <Input
                   value={sections.friction_and_drift[key]}
                   onChange={(e) =>
                     setSections((prev) => ({
                       ...prev,
-                      friction_and_drift: {
-                        ...prev.friction_and_drift,
-                        [key]: e.target.value,
-                      },
+                      friction_and_drift: { ...prev.friction_and_drift, [key]: e.target.value },
                     }))
                   }
                 />
               ) : (
-                <p className="text-sm">
-                  {sections.friction_and_drift[key] || "—"}
-                </p>
+                <p className="text-sm">{sections.friction_and_drift[key] || "—"}</p>
               )}
             </div>
           ))}
@@ -535,10 +552,7 @@ export default function NightWatchPage() {
             <Input
               value={sections.emotional_weather}
               onChange={(e) =>
-                setSections((prev) => ({
-                  ...prev,
-                  emotional_weather: e.target.value,
-                }))
+                setSections((prev) => ({ ...prev, emotional_weather: e.target.value }))
               }
               placeholder="How I'm actually feeling right now"
             />
@@ -557,9 +571,7 @@ export default function NightWatchPage() {
           {isEditing ? (
             <Input
               value={sections.movement}
-              onChange={(e) =>
-                setSections((prev) => ({ ...prev, movement: e.target.value }))
-              }
+              onChange={(e) => setSections((prev) => ({ ...prev, movement: e.target.value }))}
               placeholder="Movement completed today"
             />
           ) : (
@@ -597,10 +609,7 @@ export default function NightWatchPage() {
               variant="outline"
               size="sm"
               onClick={() =>
-                setSections((prev) => ({
-                  ...prev,
-                  completed_dims: [...prev.completed_dims, ""],
-                }))
+                setSections((prev) => ({ ...prev, completed_dims: [...prev.completed_dims, ""] }))
               }
             >
               + Add
@@ -671,10 +680,7 @@ export default function NightWatchPage() {
               onClick={() =>
                 setSections((prev) => ({
                   ...prev,
-                  open_dims: [
-                    ...prev.open_dims,
-                    { item: "", recommendation: "Do" },
-                  ],
+                  open_dims: [...prev.open_dims, { item: "", recommendation: "Do" }],
                 }))
               }
             >
@@ -693,9 +699,7 @@ export default function NightWatchPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-muted-foreground">
-              Carry-forward tasks
-            </label>
+            <label className="text-xs font-medium text-muted-foreground">Carry-forward tasks</label>
             {sections.wake_effect.carry_forward_tasks.map((task, i) => (
               <div key={i} className="flex items-center gap-2 mt-1">
                 <span className="text-muted-foreground text-sm">-</span>
@@ -703,16 +707,11 @@ export default function NightWatchPage() {
                   <Input
                     value={task}
                     onChange={(e) => {
-                      const tasks = [
-                        ...sections.wake_effect.carry_forward_tasks,
-                      ];
+                      const tasks = [...sections.wake_effect.carry_forward_tasks];
                       tasks[i] = e.target.value;
                       setSections((prev) => ({
                         ...prev,
-                        wake_effect: {
-                          ...prev.wake_effect,
-                          carry_forward_tasks: tasks,
-                        },
+                        wake_effect: { ...prev.wake_effect, carry_forward_tasks: tasks },
                       }));
                     }}
                     placeholder="Task to carry forward"
@@ -732,10 +731,7 @@ export default function NightWatchPage() {
                     ...prev,
                     wake_effect: {
                       ...prev.wake_effect,
-                      carry_forward_tasks: [
-                        ...prev.wake_effect.carry_forward_tasks,
-                        "",
-                      ],
+                      carry_forward_tasks: [...prev.wake_effect.carry_forward_tasks, ""],
                     },
                   }))
                 }
@@ -745,33 +741,24 @@ export default function NightWatchPage() {
             )}
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">
-              Energy state
-            </label>
+            <label className="text-xs font-medium text-muted-foreground">Energy state</label>
             {isEditing ? (
               <Input
                 value={sections.wake_effect.energy_state}
                 onChange={(e) =>
                   setSections((prev) => ({
                     ...prev,
-                    wake_effect: {
-                      ...prev.wake_effect,
-                      energy_state: e.target.value,
-                    },
+                    wake_effect: { ...prev.wake_effect, energy_state: e.target.value },
                   }))
                 }
                 placeholder="Energy state for tomorrow"
               />
             ) : (
-              <p className="text-sm">
-                {sections.wake_effect.energy_state || "—"}
-              </p>
+              <p className="text-sm">{sections.wake_effect.energy_state || "—"}</p>
             )}
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">
-              Open loops
-            </label>
+            <label className="text-xs font-medium text-muted-foreground">Open loops</label>
             {sections.wake_effect.open_loops.map((loop, i) => (
               <div key={i} className="flex items-center gap-2 mt-1">
                 <span className="text-muted-foreground text-sm">-</span>
@@ -783,10 +770,7 @@ export default function NightWatchPage() {
                       loops[i] = e.target.value;
                       setSections((prev) => ({
                         ...prev,
-                        wake_effect: {
-                          ...prev.wake_effect,
-                          open_loops: loops,
-                        },
+                        wake_effect: { ...prev.wake_effect, open_loops: loops },
                       }));
                     }}
                     placeholder="Open loop"
@@ -828,22 +812,16 @@ export default function NightWatchPage() {
             <Textarea
               value={sections.closing_reflection}
               onChange={(e) =>
-                setSections((prev) => ({
-                  ...prev,
-                  closing_reflection: e.target.value,
-                }))
+                setSections((prev) => ({ ...prev, closing_reflection: e.target.value }))
               }
               placeholder="A grounding closing reflection"
               rows={2}
             />
           ) : (
-            <p className="text-sm italic">
-              {sections.closing_reflection || "—"}
-            </p>
+            <p className="text-sm italic">{sections.closing_reflection || "—"}</p>
           )}
           <p className="text-xs text-muted-foreground mt-2">
-            Anchor dropped. Night Watch complete. Observe the seas, don&apos;t
-            judge the sailor.
+            Anchor dropped. Night Watch complete. Observe the seas, don&apos;t judge the sailor.
           </p>
         </CardContent>
       </Card>

@@ -18,8 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     const items = parsed.data.items.map((item) => {
-      const date = new Date(item.date);
-      date.setHours(0, 0, 0, 0);
+      const date = new Date(item.date + "T00:00:00.000Z");
       return { routine_item_id: item.routine_item_id, date };
     });
 

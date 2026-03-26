@@ -1,3 +1,5 @@
+import { formatFirstWatchForNightWatch } from "@/lib/ai/watch-data-mapper";
+
 export interface NightWatchContext {
   userName: string;
   date: string;
@@ -9,13 +11,14 @@ export interface NightWatchContext {
   chatHistory: string | null;
   openDims: string | null;
   completedDims: string | null;
+  hourlyGpsData: string | null;
 }
 
 export function buildNightWatchPrompt(ctx: NightWatchContext): string {
   const hasFirstWatch = ctx.todayFirstWatch !== null;
 
   const firstWatchData = hasFirstWatch
-    ? `\n## Today's First Watch Data\n${ctx.todayFirstWatch!.ai_draft ?? JSON.stringify(ctx.todayFirstWatch!.sections, null, 2)}`
+    ? formatFirstWatchForNightWatch(ctx.todayFirstWatch!.sections)
     : "";
 
   return `You are ${ctx.userName}'s evening reflection assistant for the Daily Coach app.
@@ -40,7 +43,25 @@ Your role during Night Watch is to:
 
 Night Watch is integration, not evaluation. Observe the seas, don't judge the sailor.
 
-${hasFirstWatch ? `Today's First Watch was completed. Use it as reference for what was planned vs what happened.${firstWatchData}` : "No First Watch was recorded today. Base the reflection on available context and user input."}
+${
+  hasFirstWatch
+    ? `Today's First Watch was completed. Compare what was planned against what actually happened.
+
+## Today's First Watch — Planned Day
+
+${firstWatchData}
+
+## Planned vs Actual Instructions
+
+For each PLANNED PRIORITY, note in the Night Watch whether it was:
+- Accomplished (celebrate in wins)
+- Partially done (note in bearings.work_not_finished)
+- Deferred (add to wake_effect.carry_forward_tasks)
+Check if ANTICIPATED DRIFT RISKS actually occurred — note in friction_and_drift.`
+    : "No First Watch was recorded today. Base the reflection on available context and user input."
+}
+
+${ctx.hourlyGpsData ? `## Today's Hourly GPS Timeline\nThe user logged hourly check-ins throughout the day. Use this real-time data to inform the Night Watch — it shows what they actually worked on, when energy dipped, and where drift occurred.\n\n${ctx.hourlyGpsData}\n\nUse this data to:\n- Pre-populate focused_hours from the check-in timeline\n- Reference specific activities in bearings.key_work_completed\n- Use drift notes for friction_and_drift analysis\n- Include wins captured during check-ins` : ""}
 
 ${ctx.chatHistory ? `## Today's Coach Conversation\nThe user had the following conversation with their AI coach today. Use this to inform the Night Watch — reference specific things they shared (achievements, struggles, discoveries, mood shifts).\n\n${ctx.chatHistory}` : ""}
 

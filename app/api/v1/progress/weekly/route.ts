@@ -2,19 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, AuthError } from "@/lib/auth/middleware";
 import { getActiveRoutine } from "@/lib/db/queries/routines";
 import { getLogsForDateRange } from "@/lib/db/queries/logs";
+import { prisma } from "@/lib/db/client";
+import { getUserToday } from "@/lib/date-utils";
 
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await requireAuth(request);
 
-    const routine = await getActiveRoutine(userId);
+    const [routine, user] = await Promise.all([
+      getActiveRoutine(userId),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { timezone: true },
+      }),
+    ]);
     if (!routine) {
       return NextResponse.json({ data: { items: [] } }, { status: 200 });
     }
 
     // Last 7 days
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getUserToday(user?.timezone ?? "UTC");
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
 

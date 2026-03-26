@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, AuthError } from "@/lib/auth/middleware";
 import { prisma } from "@/lib/db/client";
+import { getUserToday } from "@/lib/date-utils";
 
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await requireAuth(request);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { timezone: true },
+    });
+    const today = getUserToday(user?.timezone ?? "UTC");
 
     const checkin = await prisma.checkIn.findUnique({
       where: { user_id_date: { user_id: userId, date: today } },

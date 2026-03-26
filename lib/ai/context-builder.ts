@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/db/client";
+import { getUserToday } from "@/lib/date-utils";
 
 export async function buildContext(userId: string): Promise<string> {
-  // Fetch all relevant data in parallel
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Fetch user first for timezone-aware date computation
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const today = getUserToday(user?.timezone ?? "UTC");
 
-  const [user, goals, memories, routine, logs, checkin, todayWatches] = await Promise.all([
-    // User profile
-    prisma.user.findUnique({ where: { id: userId } }),
+  // Fetch all relevant data in parallel
+  const [goals, memories, routine, logs, checkin, todayWatches, todayGps] = await Promise.all([
 
     // Active goals
     prisma.goal.findMany({
@@ -35,9 +35,8 @@ export async function buildContext(userId: string): Promise<string> {
 
     // Last 7 days of logs
     (() => {
-      const sevenDaysAgo = new Date();
+      const sevenDaysAgo = new Date(today);
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      sevenDaysAgo.setHours(0, 0, 0, 0);
       return prisma.dailyLog.findMany({
         where: {
           user_id: userId,
@@ -57,6 +56,13 @@ export async function buildContext(userId: string): Promise<string> {
     prisma.watch.findMany({
       where: { user_id: userId, date: today },
     }),
+
+    // Today's hourly GPS check-ins (safe fallback if table doesn't exist yet)
+    prisma.hourlyCheckin?.findMany({
+      where: { user_id: userId, date: today },
+      orderBy: { time: "desc" },
+      take: 5,
+    }).catch(() => []) ?? Promise.resolve([]),
   ]);
 
   // Build formatted context string
@@ -134,6 +140,20 @@ export async function buildContext(userId: string): Promise<string> {
       return `- ${type} (${status}): ${summary}`;
     }).join("\n");
     sections.push(`## Today's Watches\n${watchLines}`);
+  }
+
+  // Today's Hourly GPS
+  if (todayGps.length > 0) {
+    const lastCheckin = todayGps[0]; // most recent (ordered desc)
+    const lastTime = lastCheckin.time.toLocaleTimeString("en-GB", {
+      timeZone: user?.timezone ?? "UTC",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    sections.push(
+      `## Today's Hourly GPS\n- Check-ins today: ${todayGps.length}\n- Last check-in: ${lastTime} — ${lastCheckin.working_on}${lastCheckin.energy ? ` (energy: ${lastCheckin.energy}/5)` : ""}`
+    );
   }
 
   return sections.join("\n\n");

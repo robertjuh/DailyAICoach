@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, AuthError } from "@/lib/auth/middleware";
 import { prisma } from "@/lib/db/client";
 import { getUserToday } from "@/lib/date-utils";
@@ -13,24 +13,20 @@ export async function GET(request: NextRequest) {
     });
     const today = getUserToday(user?.timezone ?? "UTC");
 
-    const watches = await prisma.watch.findMany({
+    const checkins = await prisma.hourlyCheckin.findMany({
       where: { user_id: userId, date: today },
-      orderBy: { created_at: "asc" },
+      orderBy: { time: "asc" },
     });
 
-    const firstWatch = watches.find((w) => w.type === "FIRST_WATCH") ?? null;
-    const nightWatch = watches.find((w) => w.type === "NIGHT_WATCH") ?? null;
-
-    return Response.json({ data: { firstWatch, nightWatch } }, { status: 200 });
+    return NextResponse.json({ data: checkins }, { status: 200 });
   } catch (error) {
     if (error instanceof AuthError) {
-      return Response.json(
+      return NextResponse.json(
         { error: error.message, code: error.code },
         { status: error.status }
       );
     }
-    console.error("Watch fetch error:", error);
-    return Response.json(
+    return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     );

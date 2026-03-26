@@ -40,3 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 docs/cursor_prompt_round1.md
+docs/Hourly_GPS_initial_prompt.md
+docs/gptBehaviorDocs/Quick-personal-todos.md
+docs/gptBehaviorDocs/Quick-personal-todos.md
+docs/daily_routine_spec.md

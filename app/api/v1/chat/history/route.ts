@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireAuth, AuthError } from "@/lib/auth/middleware";
 import { prisma } from "@/lib/db/client";
+import { getUserToday } from "@/lib/date-utils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,8 +10,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const dateStr = searchParams.get("date");
 
-    const date = dateStr ? new Date(dateStr) : new Date();
-    date.setHours(0, 0, 0, 0);
+    let date: Date;
+    if (dateStr) {
+      date = new Date(dateStr + "T00:00:00.000Z");
+    } else {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { timezone: true },
+      });
+      date = getUserToday(user?.timezone ?? "UTC");
+    }
 
     const conversation = await prisma.conversation.findUnique({
       where: { user_id_date: { user_id: userId, date } },

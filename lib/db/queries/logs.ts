@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/client";
+import { getUserToday } from "@/lib/date-utils";
 
 export async function getLogsForDate(userId: string, date: Date) {
   return prisma.dailyLog.findMany({
@@ -75,8 +76,11 @@ export async function calculateStreak(userId: string): Promise<number> {
 
   const totalItems = routine.items.length;
   let streak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { timezone: true },
+  });
+  const today = getUserToday(user?.timezone ?? "UTC");
 
   // Check backwards day by day
   for (let i = 0; i < 365; i++) {

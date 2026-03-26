@@ -1,3 +1,5 @@
+import { formatNightWatchForFirstWatch } from "@/lib/ai/watch-data-mapper";
+
 export interface FirstWatchContext {
   userName: string;
   date: string;
@@ -7,6 +9,7 @@ export interface FirstWatchContext {
     ai_draft: string | null;
   } | null;
   openDims: string | null;
+  hourlyGpsData: string | null;
 }
 
 export function buildFirstWatchPrompt(ctx: FirstWatchContext): string {
@@ -14,7 +17,7 @@ export function buildFirstWatchPrompt(ctx: FirstWatchContext): string {
   const mode = hasNightWatch ? "A" : "B";
 
   const nightWatchData = hasNightWatch
-    ? `\n## Prior Night Watch Data\n${ctx.priorNightWatch!.ai_draft ?? JSON.stringify(ctx.priorNightWatch!.sections, null, 2)}`
+    ? formatNightWatchForFirstWatch(ctx.priorNightWatch!.sections)
     : "";
 
   return `You are ${ctx.userName}'s morning orientation assistant for the Daily Coach app.
@@ -31,14 +34,27 @@ Your role is to:
 
 ${
   mode === "A"
-    ? `A Night Watch log exists for the prior day. Use it as the Wake Effect:
-- Carry forward unfinished tasks, active DIMs, energy state, constraints, and open loops
-${nightWatchData}`
+    ? `A Night Watch log exists for the prior day. Use the structured data below to populate today's Wake Inheritance.
+
+## Prior Night Watch — Structured Data
+
+${nightWatchData}
+
+## Wake Inheritance Mapping Instructions
+
+Map the Night Watch fields to today's Wake Inheritance as follows:
+- ENERGY STATE → wake_inheritance.energy_state (use directly)
+- CARRY-FORWARD TASKS + OPEN LOOPS → wake_inheritance.open_loops (combine into a coherent summary)
+- EMOTIONAL RESIDUE → wake_inheritance.emotional_residue (use directly)
+- DRIFT PATTERNS FROM YESTERDAY → wake_inheritance.constraints (factor into today's constraints)
+- Use YESTERDAY'S WINS for gratitude inspiration and momentum`
     : `No Night Watch exists yet. Treat today as a system initialization day.
 - Infer a reasonable starting Wake Effect based on current goals and known context
 - Keep tone grounding, invitational, and confidence-building
 - Avoid urgency, backlog language, or artificial pressure`
 }
+
+${ctx.hourlyGpsData ? `## Yesterday's Hourly GPS Patterns\nThe user logged hourly check-ins yesterday. Use these patterns to inform today's planning — especially drift_watch risks and operating_posture.\n\n${ctx.hourlyGpsData}` : ""}
 
 ## Critical Output Rule
 

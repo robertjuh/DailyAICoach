@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, Check, Pencil, Sun } from "lucide-react";
+import { Loader2, Check, Pencil, Sun, RotateCcw } from "lucide-react";
+import { WatchChat, type ChatMessage } from "@/components/watch/WatchChat";
 
 interface FirstWatchSections {
   gratitude: string[];
@@ -56,6 +57,44 @@ const emptySections: FirstWatchSections = {
   closing_bearing: "",
 };
 
+function normalizeSections(raw: Record<string, unknown>): FirstWatchSections {
+  const asArr = (v: unknown, fallback: string[]): string[] =>
+    Array.isArray(v) ? v.map(String) : fallback;
+  const asStr = (v: unknown, fallback = ""): string =>
+    typeof v === "string" ? v : fallback;
+  const asObj = (v: unknown): Record<string, unknown> =>
+    v && typeof v === "object" && !Array.isArray(v)
+      ? (v as Record<string, unknown>)
+      : {};
+
+  const wi = asObj(raw.wake_inheritance);
+  const mf = asObj(raw.mission_focus);
+  const dw = asObj(raw.drift_watch);
+
+  return {
+    gratitude: asArr(raw.gratitude, emptySections.gratitude),
+    wake_inheritance: {
+      energy_state: asStr(wi.energy_state),
+      constraints: asStr(wi.constraints),
+      open_loops: asStr(wi.open_loops),
+      emotional_residue: asStr(wi.emotional_residue),
+    },
+    mission_focus: {
+      day_type: asStr(mf.day_type, "build"),
+      primary_focus: asStr(mf.primary_focus),
+    },
+    top_priorities: asArr(raw.top_priorities, emptySections.top_priorities),
+    drift_watch: {
+      risks: asArr(dw.risks, emptySections.drift_watch.risks),
+      course_correction: asStr(dw.course_correction),
+    },
+    movement: asStr(raw.movement),
+    open_dims: asArr(raw.open_dims, emptySections.open_dims),
+    operating_posture: asStr(raw.operating_posture),
+    closing_bearing: asStr(raw.closing_bearing),
+  };
+}
+
 export default function FirstWatchPage() {
   const [watch, setWatch] = useState<Watch | null>(null);
   const [sections, setSections] = useState<FirstWatchSections>(emptySections);
@@ -63,7 +102,6 @@ export default function FirstWatchPage() {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [userInput, setUserInput] = useState("");
 
   const loadWatch = useCallback(async () => {
     try {
@@ -72,7 +110,7 @@ export default function FirstWatchPage() {
         const { data } = await res.json();
         if (data.firstWatch) {
           setWatch(data.firstWatch);
-          setSections(data.firstWatch.sections as FirstWatchSections);
+          setSections(normalizeSections(data.firstWatch.sections));
         }
       }
     } catch (err) {
@@ -86,7 +124,7 @@ export default function FirstWatchPage() {
     loadWatch();
   }, [loadWatch]);
 
-  async function generateWatch() {
+  async function generateWatch(chatMessages?: ChatMessage[]) {
     setGenerating(true);
     try {
       const res = await fetch("/api/v1/watches/generate", {
@@ -94,13 +132,13 @@ export default function FirstWatchPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "FIRST_WATCH",
-          userInput: userInput || undefined,
+          chatMessages: chatMessages ?? undefined,
         }),
       });
       if (res.ok) {
         const { data } = await res.json();
         setWatch(data);
-        setSections(data.sections as FirstWatchSections);
+        setSections(normalizeSections(data.sections));
         setEditing(true);
       }
     } catch (err) {
@@ -174,36 +212,22 @@ export default function FirstWatchPage() {
     );
   }
 
-  // No watch yet — show generate prompt
+  // No watch yet — show conversational phase
   if (!watch) {
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-4">
         <div className="flex items-center gap-3">
           <Sun className="h-7 w-7 text-amber-500" />
           <h1 className="text-2xl font-bold">First Watch</h1>
         </div>
 
         <Card>
-          <CardContent className="p-6 space-y-4">
-            <p className="text-muted-foreground">
-              Start your morning with a structured briefing. The AI will
-              generate your First Watch based on your goals, routine, and last
-              night&apos;s reflection.
-            </p>
-            <Textarea
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              placeholder="Optional: share how you're feeling, what's on your mind, or what you want to focus on today..."
-              rows={3}
+          <CardContent className="p-6">
+            <WatchChat
+              watchType="FIRST_WATCH"
+              onGenerate={generateWatch}
+              generating={generating}
             />
-            <Button onClick={generateWatch} disabled={generating}>
-              {generating ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4 mr-2" />
-              )}
-              Generate First Watch
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -225,18 +249,19 @@ export default function FirstWatchPage() {
           </Badge>
         </div>
         <div className="flex gap-2">
-          {isConfirmed && !editing && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setEditing(true)}
-            >
-              <Pencil className="h-4 w-4 mr-1" />
-              Edit
-            </Button>
-          )}
           {!isConfirmed && !editing && (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setWatch(null);
+                  setSections(emptySections);
+                }}
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Redo
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -251,13 +276,23 @@ export default function FirstWatchPage() {
               </Button>
             </>
           )}
+          {isConfirmed && !editing && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditing(true)}
+            >
+              <Pencil className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+          )}
           {isEditing && (
             <>
               <Button variant="outline" size="sm" onClick={saveDraft} disabled={saving}>
                 Save Draft
               </Button>
               <Button size="sm" onClick={confirmWatch} disabled={saving}>
-                <Check className="h-4 w-4 mr-1" />
+                {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
                 Confirm
               </Button>
             </>
@@ -277,15 +312,11 @@ export default function FirstWatchPage() {
         <CardContent className="space-y-2">
           {sections.gratitude.map((item, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="text-muted-foreground text-sm w-4">
-                {i + 1}.
-              </span>
+              <span className="text-muted-foreground text-sm w-4">{i + 1}.</span>
               {isEditing ? (
                 <Input
                   value={item}
-                  onChange={(e) =>
-                    updateArrayItem("gratitude", i, e.target.value)
-                  }
+                  onChange={(e) => updateArrayItem("gratitude", i, e.target.value)}
                   placeholder={`Gratitude item ${i + 1}`}
                 />
               ) : (
@@ -300,9 +331,7 @@ export default function FirstWatchPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Wake Inheritance</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            from prior Night Watch
-          </p>
+          <p className="text-xs text-muted-foreground">from prior Night Watch</p>
         </CardHeader>
         <CardContent className="space-y-3">
           {(
@@ -314,9 +343,7 @@ export default function FirstWatchPage() {
             ] as const
           ).map(([key, label]) => (
             <div key={key}>
-              <label className="text-xs font-medium text-muted-foreground">
-                {label}
-              </label>
+              <label className="text-xs font-medium text-muted-foreground">{label}</label>
               {isEditing ? (
                 <Input
                   value={sections.wake_inheritance[key]}
@@ -328,9 +355,7 @@ export default function FirstWatchPage() {
                   }
                 />
               ) : (
-                <p className="text-sm">
-                  {sections.wake_inheritance[key] || "—"}
-                </p>
+                <p className="text-sm">{sections.wake_inheritance[key] || "—"}</p>
               )}
             </div>
           ))}
@@ -344,45 +369,33 @@ export default function FirstWatchPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-muted-foreground">
-              Day Type
-            </label>
+            <label className="text-xs font-medium text-muted-foreground">Day Type</label>
             {isEditing ? (
               <div className="flex gap-2 pt-1">
-                {["build", "finish", "ship", "recover", "stabilize"].map(
-                  (t) => (
-                    <Button
-                      key={t}
-                      size="sm"
-                      variant={
-                        sections.mission_focus.day_type === t
-                          ? "default"
-                          : "outline"
-                      }
-                      onClick={() =>
-                        updateSection("mission_focus", {
-                          ...sections.mission_focus,
-                          day_type: t,
-                        })
-                      }
-                    >
-                      {t}
-                    </Button>
-                  )
-                )}
+                {["build", "finish", "ship", "recover", "stabilize"].map((t) => (
+                  <Button
+                    key={t}
+                    size="sm"
+                    variant={sections.mission_focus.day_type === t ? "default" : "outline"}
+                    onClick={() =>
+                      updateSection("mission_focus", {
+                        ...sections.mission_focus,
+                        day_type: t,
+                      })
+                    }
+                  >
+                    {t}
+                  </Button>
+                ))}
               </div>
             ) : (
               <p className="text-sm">
-                <Badge variant="secondary">
-                  {sections.mission_focus.day_type}
-                </Badge>
+                <Badge variant="secondary">{sections.mission_focus.day_type}</Badge>
               </p>
             )}
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">
-              Primary Focus
-            </label>
+            <label className="text-xs font-medium text-muted-foreground">Primary Focus</label>
             {isEditing ? (
               <Input
                 value={sections.mission_focus.primary_focus}
@@ -395,9 +408,7 @@ export default function FirstWatchPage() {
                 placeholder="The one thing that matters most today"
               />
             ) : (
-              <p className="text-sm">
-                {sections.mission_focus.primary_focus || "—"}
-              </p>
+              <p className="text-sm">{sections.mission_focus.primary_focus || "—"}</p>
             )}
           </div>
         </CardContent>
@@ -411,15 +422,11 @@ export default function FirstWatchPage() {
         <CardContent className="space-y-2">
           {sections.top_priorities.map((item, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="text-muted-foreground text-sm w-4">
-                {i + 1}.
-              </span>
+              <span className="text-muted-foreground text-sm w-4">{i + 1}.</span>
               {isEditing ? (
                 <Input
                   value={item}
-                  onChange={(e) =>
-                    updateArrayItem("top_priorities", i, e.target.value)
-                  }
+                  onChange={(e) => updateArrayItem("top_priorities", i, e.target.value)}
                   placeholder={`Priority ${i + 1}`}
                 />
               ) : (
@@ -433,15 +440,11 @@ export default function FirstWatchPage() {
       {/* Drift Watch */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">
-            Drift Watch & Course Correction
-          </CardTitle>
+          <CardTitle className="text-base">Drift Watch & Course Correction</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-muted-foreground">
-              Drift Risks
-            </label>
+            <label className="text-xs font-medium text-muted-foreground">Drift Risks</label>
             {sections.drift_watch.risks.map((risk, i) => (
               <div key={i} className="flex items-center gap-2 mt-1">
                 <span className="text-muted-foreground text-sm">-</span>
@@ -451,10 +454,7 @@ export default function FirstWatchPage() {
                     onChange={(e) => {
                       const risks = [...sections.drift_watch.risks];
                       risks[i] = e.target.value;
-                      updateSection("drift_watch", {
-                        ...sections.drift_watch,
-                        risks,
-                      });
+                      updateSection("drift_watch", { ...sections.drift_watch, risks });
                     }}
                     placeholder={`Drift risk ${i + 1}`}
                   />
@@ -465,9 +465,7 @@ export default function FirstWatchPage() {
             ))}
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">
-              Course Correction
-            </label>
+            <label className="text-xs font-medium text-muted-foreground">Course Correction</label>
             {isEditing ? (
               <Input
                 value={sections.drift_watch.course_correction}
@@ -480,9 +478,7 @@ export default function FirstWatchPage() {
                 placeholder="One gentle, practical correction"
               />
             ) : (
-              <p className="text-sm">
-                {sections.drift_watch.course_correction || "—"}
-              </p>
+              <p className="text-sm">{sections.drift_watch.course_correction || "—"}</p>
             )}
           </div>
         </CardContent>
@@ -522,9 +518,7 @@ export default function FirstWatchPage() {
                 <div className="flex-1 flex gap-2">
                   <Input
                     value={dim}
-                    onChange={(e) =>
-                      updateArrayItem("open_dims", i, e.target.value)
-                    }
+                    onChange={(e) => updateArrayItem("open_dims", i, e.target.value)}
                     placeholder="DIM item"
                     className="flex-1"
                   />
@@ -551,18 +545,13 @@ export default function FirstWatchPage() {
               variant="outline"
               size="sm"
               onClick={() =>
-                setSections((prev) => ({
-                  ...prev,
-                  open_dims: [...prev.open_dims, ""],
-                }))
+                setSections((prev) => ({ ...prev, open_dims: [...prev.open_dims, ""] }))
               }
             >
               + Add DIM
             </Button>
           )}
-          <p className="text-xs text-muted-foreground">
-            Captured, not urgent.
-          </p>
+          <p className="text-xs text-muted-foreground">Captured, not urgent.</p>
         </CardContent>
       </Card>
 
@@ -575,9 +564,7 @@ export default function FirstWatchPage() {
           {isEditing ? (
             <Input
               value={sections.operating_posture}
-              onChange={(e) =>
-                updateSection("operating_posture", e.target.value)
-              }
+              onChange={(e) => updateSection("operating_posture", e.target.value)}
               placeholder="How to move through the day"
             />
           ) : (
@@ -595,16 +582,12 @@ export default function FirstWatchPage() {
           {isEditing ? (
             <Textarea
               value={sections.closing_bearing}
-              onChange={(e) =>
-                updateSection("closing_bearing", e.target.value)
-              }
+              onChange={(e) => updateSection("closing_bearing", e.target.value)}
               placeholder="Orientation, reassurance, forward momentum"
               rows={2}
             />
           ) : (
-            <p className="text-sm italic">
-              {sections.closing_bearing || "—"}
-            </p>
+            <p className="text-sm italic">{sections.closing_bearing || "—"}</p>
           )}
           <p className="text-xs text-muted-foreground mt-2">
             Proceed steadily. Observe the seas, don&apos;t judge the sailor.

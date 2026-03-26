@@ -68,6 +68,10 @@ model User {
   notify_time       String?   // e.g. "07:00"
   first_watch_time  String?   // e.g. "07:00"
   night_watch_time  String?   // e.g. "21:00"
+  hourly_gps_enabled    Boolean  @default(true)
+  hourly_gps_interval   Int      @default(60) // minutes between check-ins
+  hourly_gps_start_time String?  // e.g. "09:00"
+  hourly_gps_end_time   String?  // e.g. "18:00"
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
 
@@ -82,6 +86,7 @@ model User {
   watches         Watch[]
   dims            Dim[]
   priority_filters PriorityFilter[]
+  hourly_checkins HourlyCheckin[]
 
   @@map("users")
 }
@@ -258,6 +263,24 @@ model Watch {
 
   @@unique([user_id, date, type])
   @@map("watches")
+}
+
+model HourlyCheckin {
+  id         String   @id @default(cuid())
+  user_id    String
+  date       DateTime @db.Date
+  time       DateTime // actual timestamp of check-in
+  working_on String
+  drift_note String?
+  win        String?
+  energy     Int?     // 1-5
+  next_plan  String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("hourly_checkins")
 }
 
 model Dim {
