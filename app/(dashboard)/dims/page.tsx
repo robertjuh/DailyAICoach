@@ -74,15 +74,13 @@ export default function DimsPage() {
 
   const fetchDims = useCallback(async () => {
     const params = new URLSearchParams();
-    if (tab === "open") params.set("status", "OPEN");
     const res = await fetch(`/api/v1/dims?${params}`);
     if (res.ok) {
       const json = await res.json();
       setDims(
-        tab === "closed"
-          ? json.data.filter((d: Dim) => d.status !== "OPEN")
-          : json.data
+        json.data
       );
+
     }
   }, [tab]);
 
@@ -118,14 +116,6 @@ export default function DimsPage() {
     setCreating(false);
   }
 
-  async function handleTriage(dimId: string, status: string) {
-    const res = await fetch(`/api/v1/dims/${dimId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) fetchDims();
-  }
 
   async function handleReanalyze(dimId: string) {
     await fetch("/api/v1/dims/analyze", {
@@ -145,8 +135,11 @@ export default function DimsPage() {
     fetchFilters();
   }
 
-  const openCount = dims.filter((d) => d.status === "OPEN").length;
 
+
+  const openCount = dims.filter((d) => d.status === "OPEN").length;
+  const closedCount = dims.filter((d) => d.status !== "OPEN").length;
+ 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -248,7 +241,7 @@ export default function DimsPage() {
             size="sm"
             onClick={() => setTab(t)}
           >
-            {t === "open" ? `Open (${openCount})` : t === "closed" ? "Closed" : "All"}
+            {t === "open" ? `Open (${openCount})` : t === "closed" ? "Closed " + `(${closedCount})` : "All"}
           </Button>
         ))}
       </div>
@@ -268,12 +261,19 @@ export default function DimsPage() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {dims.map((dim) => {
+          { dims.filter((d) => {
+              if (tab === "open") return d.status === "OPEN";
+              if (tab === "closed") return d.status !== "OPEN";
+              if (tab === "all") return true;
+              return true;
+            }).map((dim) => {
             const CatIcon = CATEGORY_ICONS[dim.category];
             const isExpanded = expandedId === dim.id;
 
             return (
+              
               <Card key={dim.id} className="overflow-hidden">
+                <h1 key={dim.id}>{dim.status}</h1>
                 <div
                   className="flex items-start gap-3 p-4 cursor-pointer"
                   onClick={() => setExpandedId(isExpanded ? null : dim.id)}
