@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { StreakCard } from "@/components/dashboard/StreakCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 interface DayData {
   date: string;
@@ -19,6 +20,7 @@ export default function ProgressPage() {
   const [streak, setStreak] = useState(0);
   const [items, setItems] = useState<WeeklyItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLocale();
 
   useEffect(() => {
     async function loadProgress() {
@@ -63,18 +65,18 @@ export default function ProgressPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold">Progress</h1>
+      <h1 className="text-2xl font-bold">{t("progress.title")}</h1>
 
       <StreakCard streak={streak} />
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">7-Day Consistency</CardTitle>
+          <CardTitle className="text-lg">{t("progress.sevenDayConsistency")}</CardTitle>
         </CardHeader>
         <CardContent>
           {items.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No routine items to track yet.
+              {t("progress.noItems")}
             </p>
           ) : (
             <div className="space-y-4">

@@ -1,4 +1,5 @@
 import { formatFirstWatchForNightWatch } from "@/lib/ai/watch-data-mapper";
+import { getLocaleInstruction } from "@/lib/ai/locale-instruction";
 
 export interface NightWatchContext {
   userName: string;
@@ -12,6 +13,7 @@ export interface NightWatchContext {
   openDims: string | null;
   completedDims: string | null;
   hourlyGpsData: string | null;
+  locale: string;
 }
 
 export function buildNightWatchPrompt(ctx: NightWatchContext): string {
@@ -108,5 +110,5 @@ ${ctx.completedDims ? `## DIMs Completed Today\nCelebrate these in the wins sect
 ${ctx.openDims ? `## Open DIMs (for triage)\nThese are the user's currently open DIMs. For each, provide a triage recommendation in the open_dims section. Reference specific items by content.\n\n${ctx.openDims}` : ""}
 
 ## User Context
-${ctx.context}`;
+${ctx.context}${getLocaleInstruction(ctx.locale)}`;
 }

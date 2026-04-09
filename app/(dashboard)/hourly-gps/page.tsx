@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Settings, ChevronDown, ChevronUp, Compass } from "lucide-react";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 interface HourlyCheckin {
   id: string;
@@ -39,6 +40,8 @@ export default function HourlyGpsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
+
+  const { t } = useLocale();
 
   // Form state
   const [workingOn, setWorkingOn] = useState("");
@@ -163,7 +166,7 @@ export default function HourlyGpsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Compass className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-semibold">Hourly GPS</h1>
+          <h1 className="text-xl font-semibold">{t("hourlyGps.title")}</h1>
         </div>
         <div className="flex items-center gap-2">
           {status?.enabled && status.inActiveWindow && (
@@ -171,10 +174,10 @@ export default function HourlyGpsPage() {
               {status.isReady ? (
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  Check-in ready
+                  {t("hourlyGps.checkinReady")}
                 </span>
               ) : (
-                `Next in ${status.minutesUntilReady}m`
+                t("hourlyGps.nextIn", { minutes: String(status.minutesUntilReady) })
               )}
             </span>
           )}
@@ -192,7 +195,7 @@ export default function HourlyGpsPage() {
         <Card>
           <CardContent className="pt-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Enable Hourly GPS</span>
+              <span className="text-sm font-medium">{t("hourlyGps.enableLabel")}</span>
               <button
                 onClick={() => handleSettingsUpdate({ hourly_gps_enabled: !settings.hourly_gps_enabled })}
                 className={`relative w-10 h-5 rounded-full transition-colors ${
@@ -208,7 +211,7 @@ export default function HourlyGpsPage() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Interval</span>
+              <span className="text-sm font-medium">{t("hourlyGps.intervalLabel")}</span>
               <select
                 value={settings.hourly_gps_interval}
                 onChange={(e) => handleSettingsUpdate({ hourly_gps_interval: Number(e.target.value) })}
@@ -224,7 +227,7 @@ export default function HourlyGpsPage() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Active hours</span>
+              <span className="text-sm font-medium">{t("hourlyGps.activeHoursLabel")}</span>
               <div className="flex items-center gap-1 text-sm">
                 <input
                   type="time"
@@ -232,7 +235,7 @@ export default function HourlyGpsPage() {
                   onChange={(e) => handleSettingsUpdate({ hourly_gps_start_time: e.target.value })}
                   className="rounded-md border border-border bg-background px-2 py-1"
                 />
-                <span className="text-muted-foreground">to</span>
+                <span className="text-muted-foreground">{t("common.to")}</span>
                 <input
                   type="time"
                   value={settings.hourly_gps_end_time ?? "18:00"}
@@ -252,7 +255,7 @@ export default function HourlyGpsPage() {
             <div>
               <input
                 type="text"
-                placeholder="What are you working on right now?"
+                placeholder={t("hourlyGps.workingOnPlaceholder")}
                 value={workingOn}
                 onChange={(e) => setWorkingOn(e.target.value)}
                 className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -262,7 +265,7 @@ export default function HourlyGpsPage() {
 
             {/* Energy quick select */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Energy:</span>
+              <span className="text-xs text-muted-foreground">{t("hourlyGps.energyLabel")}</span>
               {[1, 2, 3, 4, 5].map((level) => (
                 <button
                   key={level}
@@ -286,14 +289,14 @@ export default function HourlyGpsPage() {
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               {showOptional ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              {showOptional ? "Less" : "More"} options
+              {showOptional ? t("common.lessOptions") : t("common.moreOptions")}
             </button>
 
             {showOptional && (
               <div className="space-y-2">
                 <input
                   type="text"
-                  placeholder="Any drift or distraction?"
+                  placeholder={t("hourlyGps.driftPlaceholder")}
                   value={driftNote}
                   onChange={(e) => setDriftNote(e.target.value)}
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -327,7 +330,7 @@ export default function HourlyGpsPage() {
               disabled={!workingOn.trim() || submitting}
               className="w-full"
             >
-              {submitting ? "Logging..." : "Log Position"}
+              {submitting ? t("hourlyGps.logging") : t("hourlyGps.logPosition")}
             </Button>
           </form>
         </CardContent>
@@ -399,7 +402,7 @@ export default function HourlyGpsPage() {
       {/* Empty state */}
       {checkins.length === 0 && (
         <p className="text-center text-sm text-muted-foreground py-8">
-          No check-ins yet today. Log your first position above.
+          {t("hourlyGps.noCheckins")}
         </p>
       )}
     </div>

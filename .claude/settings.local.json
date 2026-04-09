@@ -49,7 +49,15 @@
       "Bash(find /root/devprojects/DailyAICoach/lib/db/queries -type f -name *.ts)",
       "Bash(node -e \"const p = require\\(''@prisma/client''\\); console.log\\(Object.keys\\(p\\).filter\\(k => k.startsWith\\(''P''\\)\\).join\\('', ''\\)\\)\")",
       "Bash(grep -E \"\\\\.md$\")",
-      "Bash(ls /root/devprojects/DailyAICoach/app/\\\\\\(dashboard\\\\\\)/)"
+      "Bash(ls /root/devprojects/DailyAICoach/app/\\\\\\(dashboard\\\\\\)/)",
+      "Bash(ls \"/root/devprojects/DailyAICoach/app/\\(dashboard\\)/\")",
+      "Bash(ls \"/root/devprojects/DailyAICoach/app/\\(dashboard\\)/checkin/\")",
+      "Bash(ls \"/root/devprojects/DailyAICoach/app/\\(dashboard\\)/dims/\")",
+      "Bash(ls \"/root/devprojects/DailyAICoach/app/\\(dashboard\\)/hourly-gps/\")",
+      "Bash(ls \"/root/devprojects/DailyAICoach/app/\\(dashboard\\)/routine/\")",
+      "Bash(ls \"/root/devprojects/DailyAICoach/app/\\(dashboard\\)/progress/\")",
+      "Bash(ls \"/root/devprojects/DailyAICoach/app/\\(dashboard\\)/chat/\")",
+      "Bash(node -e \"const {Pool} = require\\(''pg''\\); console.log\\(''Pool available:'', typeof Pool\\)\")"
     ]
   }
 }

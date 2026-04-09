@@ -1,4 +1,5 @@
 import { formatNightWatchForFirstWatch } from "@/lib/ai/watch-data-mapper";
+import { getLocaleInstruction } from "@/lib/ai/locale-instruction";
 
 export interface FirstWatchContext {
   userName: string;
@@ -10,6 +11,7 @@ export interface FirstWatchContext {
   } | null;
   openDims: string | null;
   hourlyGpsData: string | null;
+  locale: string;
 }
 
 export function buildFirstWatchPrompt(ctx: FirstWatchContext): string {
@@ -95,5 +97,5 @@ You MUST return a valid JSON object with these exact keys. Every value must be a
 ${ctx.openDims ? `## Open DIMs (Decisions, Ideas, Micro-tasks)\nThese are the user's currently open DIMs from the DIM Ledger. Reference high-priority items in the open_dims and top_priorities sections where relevant. Items marked with high scores (>70) deserve special attention.\n\n${ctx.openDims}` : ""}
 
 ## User Context
-${ctx.context}`;
+${ctx.context}${getLocaleInstruction(ctx.locale)}`;
 }

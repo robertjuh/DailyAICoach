@@ -12,6 +12,7 @@ import {
   formatFirstWatchForNightWatch,
   formatHourlyGpsForWatch,
 } from "@/lib/ai/watch-data-mapper";
+import { getLocaleInstruction } from "@/lib/ai/locale-instruction";
 
 const chatSchema = z.object({
   watchType: z.enum(["FIRST_WATCH", "NIGHT_WATCH"]),
@@ -31,7 +32,8 @@ function buildWatchChatPrompt(
   context: string,
   dimsSummary: string | null,
   priorWatchData: string | null,
-  hourlyGpsData: string | null
+  hourlyGpsData: string | null,
+  locale: string = "en"
 ): string {
   const isFirstWatch = watchType === "FIRST_WATCH";
 
@@ -90,7 +92,7 @@ If ${userName} mentions a new idea, decision, or task during the conversation, c
 Acknowledge the capture naturally: "I've noted that down in your DIM Ledger."
 
 ## User Context
-${context}`;
+${context}${getLocaleInstruction(locale)}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -171,13 +173,15 @@ export async function POST(request: NextRequest) {
             .join("\n")
         : null;
 
+    const locale = user?.locale ?? "en";
     const systemPrompt = buildWatchChatPrompt(
       watchType,
       userName,
       context,
       dimsSummary,
       priorWatch,
-      gpsData
+      gpsData,
+      locale
     );
 
     const openaiMessages: OpenAI.ChatCompletionMessageParam[] = [

@@ -6,6 +6,7 @@ import { StreakCard } from "@/components/dashboard/StreakCard";
 import { TodayProgress } from "@/components/dashboard/TodayProgress";
 import { RoutineChecklist } from "@/components/routine/RoutineChecklist";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 interface RoutineItem {
   id: string;
@@ -21,6 +22,7 @@ export default function DashboardPage() {
   const [streak, setStreak] = useState(0);
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { t } = useLocale();
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -127,7 +129,7 @@ export default function DashboardPage() {
 
   const hour = new Date().getHours();
   const greeting =
-    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+    hour < 12 ? t("dashboard.goodMorning") : hour < 18 ? t("dashboard.goodAfternoon") : t("dashboard.goodEvening");
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -152,7 +154,7 @@ export default function DashboardPage() {
       {!hasCheckedIn && (
         <Link href="/checkin">
           <Button variant="outline" className="w-full">
-            Complete your daily check-in
+            {t("dashboard.completeCheckin")}
           </Button>
         </Link>
       )}

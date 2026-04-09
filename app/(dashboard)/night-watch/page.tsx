@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Check, Pencil, Moon, Plus, X, RotateCcw } from "lucide-react";
 import { WatchChat, type ChatMessage } from "@/components/watch/WatchChat";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 interface FocusedHour {
   time_block: string;
@@ -152,6 +153,8 @@ export default function NightWatchPage() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
 
+  const { t } = useLocale();
+
   const loadWatch = useCallback(async () => {
     try {
       const res = await fetch("/api/v1/watches/today");
@@ -253,7 +256,7 @@ export default function NightWatchPage() {
       <div className="max-w-2xl mx-auto space-y-4">
         <div className="flex items-center gap-3">
           <Moon className="h-7 w-7 text-indigo-400" />
-          <h1 className="text-2xl font-bold">Night Watch</h1>
+          <h1 className="text-2xl font-bold">{t("nightWatch.title")}</h1>
         </div>
 
         <Card>
@@ -278,9 +281,9 @@ export default function NightWatchPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Moon className="h-7 w-7 text-indigo-400" />
-          <h1 className="text-2xl font-bold">Night Watch</h1>
+          <h1 className="text-2xl font-bold">{t("nightWatch.title")}</h1>
           <Badge variant={isConfirmed ? "default" : "secondary"}>
-            {isConfirmed ? "Confirmed" : "Draft"}
+            {isConfirmed ? t("common.confirmed") : t("common.draft")}
           </Badge>
         </div>
         <div className="flex gap-2">
@@ -295,7 +298,7 @@ export default function NightWatchPage() {
                 }}
               >
                 <RotateCcw className="h-4 w-4 mr-1" />
-                Redo
+                {t("common.redo")}
               </Button>
               <Button
                 variant="outline"
@@ -303,11 +306,11 @@ export default function NightWatchPage() {
                 onClick={() => setEditing(true)}
               >
                 <Pencil className="h-4 w-4 mr-1" />
-                Edit
+                {t("common.edit")}
               </Button>
               <Button size="sm" onClick={confirmWatch} disabled={saving}>
                 <Check className="h-4 w-4 mr-1" />
-                Confirm
+                {t("common.confirm")}
               </Button>
             </>
           )}
@@ -318,17 +321,17 @@ export default function NightWatchPage() {
               onClick={() => setEditing(true)}
             >
               <Pencil className="h-4 w-4 mr-1" />
-              Edit
+              {t("common.edit")}
             </Button>
           )}
           {isEditing && (
             <>
               <Button variant="outline" size="sm" onClick={saveDraft} disabled={saving}>
-                Save Draft
+                {t("common.saveDraft")}
               </Button>
               <Button size="sm" onClick={confirmWatch} disabled={saving}>
                 {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
-                Confirm
+                {t("common.confirm")}
               </Button>
             </>
           )}
@@ -342,7 +345,7 @@ export default function NightWatchPage() {
             <Input
               value={sections.theme}
               onChange={(e) => setSections((prev) => ({ ...prev, theme: e.target.value }))}
-              placeholder="A short phrase capturing today's essence"
+              placeholder={t("nightWatch.themePlaceholder")}
               className="text-center italic"
             />
           ) : (
@@ -356,21 +359,21 @@ export default function NightWatchPage() {
       {/* Bearings from the Day */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Bearings from the Day</CardTitle>
+          <CardTitle className="text-base">{t("nightWatch.bearings")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {(
             [
-              ["key_work_completed", "Key work completed"],
-              ["work_not_finished", "Work not finished"],
-              ["unexpected_events", "Unexpected events"],
-            ] as const
-          ).map(([key, label]) => (
+              ["key_work_completed", t("nightWatch.keyWorkCompleted")],
+              ["work_not_finished", t("nightWatch.workNotFinished")],
+              ["unexpected_events", t("nightWatch.unexpectedEvents")],
+            ] as [string, string][]
+          ).map(([key, label]: [string, string]) => (
             <div key={key}>
               <label className="text-xs font-medium text-muted-foreground">{label}</label>
               {isEditing ? (
                 <Input
-                  value={sections.bearings[key]}
+                  value={sections.bearings[key as keyof typeof sections.bearings]}
                   onChange={(e) =>
                     setSections((prev) => ({
                       ...prev,
@@ -379,7 +382,7 @@ export default function NightWatchPage() {
                   }
                 />
               ) : (
-                <p className="text-sm">{sections.bearings[key] || "—"}</p>
+                <p className="text-sm">{sections.bearings[key as keyof typeof sections.bearings] || "—"}</p>
               )}
             </div>
           ))}

@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/auth/supabase";
 import { prisma } from "@/lib/db/client";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Navbar } from "@/components/layout/Navbar";
+import { DashboardShell } from "@/components/layout/DashboardShell";
+import type { Locale } from "@/lib/i18n/locale-context";
 
 export default async function DashboardLayout({
   children,
@@ -27,13 +27,11 @@ export default async function DashboardLayout({
     redirect("/onboarding");
   }
 
+  const locale = (dbUser.locale ?? "en") as Locale;
+
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
-      <div className="md:pl-64">
-        <main className="p-4 md:p-8 pb-24 md:pb-8">{children}</main>
-      </div>
-      <Navbar />
-    </div>
+    <DashboardShell locale={locale}>
+      {children}
+    </DashboardShell>
   );
 }

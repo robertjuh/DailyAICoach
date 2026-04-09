@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Send, Sparkles } from "lucide-react";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 export type ChatMessage = {
   role: "user" | "assistant";
@@ -23,6 +24,7 @@ export function WatchChat({ watchType, onGenerate, generating }: WatchChatProps)
   const [started, setStarted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useLocale();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -31,7 +33,7 @@ export function WatchChat({ watchType, onGenerate, generating }: WatchChatProps)
   async function startConversation() {
     setStarted(true);
     // Send an empty first message to kick off the AI greeting
-    await sendMessage("Hi, I'm ready for my " + (watchType === "FIRST_WATCH" ? "First Watch" : "Night Watch") + ".");
+    await sendMessage(watchType === "FIRST_WATCH" ? t("watchChat.readyFirstWatch") : t("watchChat.readyNightWatch"));
   }
 
   async function sendMessage(text: string) {
@@ -126,12 +128,12 @@ export function WatchChat({ watchType, onGenerate, generating }: WatchChatProps)
       <div className="text-center space-y-4 py-8">
         <p className="text-muted-foreground">
           {watchType === "FIRST_WATCH"
-            ? "Start a conversation to orient your morning. Your AI crew member will help you set your bearing for the day."
-            : "Start a conversation to close the day. Your AI crew member will help you reflect on what happened and prepare tomorrow."}
+            ? t("watchChat.firstWatchIntro")
+            : t("watchChat.nightWatchIntro")}
         </p>
         <Button onClick={startConversation} size="lg">
           <Sparkles className="h-4 w-4 mr-2" />
-          Begin {watchType === "FIRST_WATCH" ? "First Watch" : "Night Watch"}
+          {watchType === "FIRST_WATCH" ? t("watchChat.beginFirstWatch") : t("watchChat.beginNightWatch")}
         </Button>
       </div>
     );
@@ -176,7 +178,7 @@ export function WatchChat({ watchType, onGenerate, generating }: WatchChatProps)
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Share what's on your mind..."
+            placeholder={t("watchChat.inputPlaceholder")}
             disabled={streaming || generating}
             autoFocus
           />
@@ -201,8 +203,8 @@ export function WatchChat({ watchType, onGenerate, generating }: WatchChatProps)
               <Sparkles className="h-4 w-4 mr-2" />
             )}
             {generating
-              ? "Generating..."
-              : `Generate ${watchType === "FIRST_WATCH" ? "First Watch" : "Night Watch"}`}
+              ? t("watchChat.generating")
+              : watchType === "FIRST_WATCH" ? t("watchChat.generateFirstWatch") : t("watchChat.generateNightWatch")}
           </Button>
         )}
       </div>

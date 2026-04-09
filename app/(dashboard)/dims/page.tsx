@@ -19,6 +19,7 @@ import {
   RefreshCw,
   Settings2,
 } from "lucide-react";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 type Dim = {
   id: string;
@@ -71,6 +72,7 @@ export default function DimsPage() {
   const [tab, setTab] = useState<"open" | "closed" | "all">("open");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const { t } = useLocale();
 
   const fetchDims = useCallback(async () => {
     const params = new URLSearchParams();
@@ -99,23 +101,51 @@ export default function DimsPage() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!newDim.trim()) return;
+    if (!newDim.trim()) {
+      return;
+    };
+  
     setCreating(true);
+  
+    try {
+      const dimsResp = await fetch("/api/v1/dims", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: newDim.trim(),
+          category: newCategory,
+        }),
+      });
+  
+      if (!dimsResp.ok) return;
+  
+      const json = await dimsResp.json();
+      const createdDim = json.data;
+      console.log(createdDim);
 
-    const res = await fetch("/api/v1/dims", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: newDim.trim(), category: newCategory }),
-    });
-
-    if (res.ok) {
+      if (createdDim?.id) {
+        await fetch("/api/v1/dims/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dim_id: createdDim.id }),
+        });
+      }
+  
       setNewDim("");
-      // Small delay to let Priority Engine start, then refresh
-      setTimeout(() => fetchDims(), 500);
+      await fetchDims();
+    } finally {
+      setCreating(false);
     }
-    setCreating(false);
   }
 
+  async function handleTriage(dimId: string, status: string) {
+    const res = await fetch(`/api/v1/dims/${dimId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) fetchDims();
+  }
 
   async function handleReanalyze(dimId: string) {
     await fetch("/api/v1/dims/analyze", {
@@ -144,10 +174,9 @@ export default function DimsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">DIM Ledger</h1>
+          <h1 className="text-2xl font-bold">{t("dims.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Decisions, Ideas &amp; Micro-tasks — observe the squirrel, don&apos;t
-            chase it
+            {t("dims.subtitle")}
           </p>
         </div>
         <Button
@@ -156,7 +185,7 @@ export default function DimsPage() {
           onClick={() => setShowFilters(!showFilters)}
         >
           <Settings2 className="h-4 w-4 mr-1" />
-          Filters
+          {t("dims.filters")}
         </Button>
       </div>
 
@@ -164,12 +193,12 @@ export default function DimsPage() {
       {showFilters && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Priority Engine Filters</CardTitle>
+            <CardTitle className="text-sm">{t("dims.priorityEngineFilters")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {filters.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                No filters yet. Complete onboarding to get defaults.
+                {t("dims.noFilters")}
               </p>
             )}
             {filters.map((f) => (
@@ -221,12 +250,12 @@ export default function DimsPage() {
             <Input
               value={newDim}
               onChange={(e) => setNewDim(e.target.value)}
-              placeholder="Capture a thought... (Enter to save)"
+              placeholder={t("dims.capturePlaceholder")}
               className="flex-1"
               disabled={creating}
             />
             <Button type="submit" disabled={creating || !newDim.trim()}>
-              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : "DIM it"}
+              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : t("dims.dimIt")}
             </Button>
           </form>
         </CardContent>
@@ -234,14 +263,14 @@ export default function DimsPage() {
 
       {/* Tabs */}
       <div className="flex gap-2">
-        {(["open", "closed", "all"] as const).map((t) => (
+        {(["open", "closed", "all"] as const).map((tabKey) => (
           <Button
-            key={t}
-            variant={tab === t ? "default" : "outline"}
+            key={tabKey}
+            variant={tab === tabKey ? "default" : "outline"}
             size="sm"
-            onClick={() => setTab(t)}
+            onClick={() => setTab(tabKey)}
           >
-            {t === "open" ? `Open (${openCount})` : t === "closed" ? "Closed " + `(${closedCount})` : "All"}
+            {tabKey === "open" ? `${t("dims.open")} (${openCount})` : tabKey === "closed" ? `${t("dims.closed")} (${closedCount})` : t("dims.all")}
           </Button>
         ))}
       </div>
@@ -255,8 +284,8 @@ export default function DimsPage() {
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             {tab === "open"
-              ? "No open DIMs. Capture a thought above!"
-              : "No DIMs found."}
+              ? t("dims.noOpenDims")
+              : t("dims.noDimsFound")}
           </CardContent>
         </Card>
       ) : (
@@ -273,7 +302,6 @@ export default function DimsPage() {
             return (
               
               <Card key={dim.id} className="overflow-hidden">
-                <h1 key={dim.id}>{dim.status}</h1>
                 <div
                   className="flex items-start gap-3 p-4 cursor-pointer"
                   onClick={() => setExpandedId(isExpanded ? null : dim.id)}
@@ -317,7 +345,7 @@ export default function DimsPage() {
                       )}
                       {dim.related_goal && (
                         <span className="text-xs text-muted-foreground">
-                          Goal: {dim.related_goal.title}
+                          {t("common.goal")}: {dim.related_goal.title}
                         </span>
                       )}
                     </div>
@@ -337,7 +365,7 @@ export default function DimsPage() {
                       </p>
                     )}
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>Source: {dim.source}</span>
+                      <span>{t("common.source")}: {dim.source}</span>
                       <span>·</span>
                       <span>
                         {new Date(dim.created_at).toLocaleDateString()}
@@ -357,7 +385,7 @@ export default function DimsPage() {
                             }}
                           >
                             {action === "COMPLETED"
-                              ? "Done"
+                              ? t("common.done")
                               : action.charAt(0) + action.slice(1).toLowerCase()}
                           </Button>
                         ))}
@@ -370,7 +398,7 @@ export default function DimsPage() {
                           }}
                         >
                           <RefreshCw className="h-3 w-3 mr-1" />
-                          Re-analyze
+                          {t("dims.reAnalyze")}
                         </Button>
                       </div>
                     )}
@@ -384,7 +412,7 @@ export default function DimsPage() {
                           handleTriage(dim.id, "OPEN");
                         }}
                       >
-                        Reopen
+                        {t("common.reopen")}
                       </Button>
                     )}
                   </div>

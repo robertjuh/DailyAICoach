@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 interface RoutineItemData {
   id: string;
@@ -22,6 +23,7 @@ export function RoutineChecklist({
   onToggle,
 }: RoutineChecklistProps) {
   const [loading, setLoading] = useState<string | null>(null);
+  const { t } = useLocale();
 
   const handleToggle = useCallback(
     async (itemId: string) => {
@@ -36,7 +38,7 @@ export function RoutineChecklist({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Morning Routine</CardTitle>
+        <CardTitle className="text-lg">{t("dashboard.morningRoutine")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {items.map((item) => {

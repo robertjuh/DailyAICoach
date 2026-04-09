@@ -1,6 +1,9 @@
+import { getLocaleInstruction } from "@/lib/ai/locale-instruction";
+
 export function buildSystemPrompt(
   context: string,
-  adminPrompt: string
+  adminPrompt: string,
+  locale: string = "en"
 ): string {
   const defaultPrompt = `You are a warm, supportive daily routine coach. Your name is Coach.
 
@@ -51,5 +54,5 @@ The DIM system captures these so the user doesn't lose track. Use them when you 
   return `${systemPrompt}
 
 ## Current User Context
-${context}`;
+${context}${getLocaleInstruction(locale)}`;
 }

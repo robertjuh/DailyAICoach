@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
 
     const context = await buildContext(userId);
     const userName = user?.name ?? "Sailor";
+    const locale = user?.locale ?? "en";
 
     const dateStr = today.toISOString().split("T")[0];
     let systemPrompt: string;
@@ -110,6 +111,7 @@ export async function POST(request: NextRequest) {
           : null,
         openDims: dimsSummary,
         hourlyGpsData: formatHourlyGpsForWatch(yesterdayGps),
+        locale,
       });
     } else {
       // Get today's First Watch, chat history, and completed DIMs today in parallel
@@ -173,6 +175,7 @@ export async function POST(request: NextRequest) {
         openDims: dimsSummary,
         completedDims: completedDimsSummary,
         hourlyGpsData: formatHourlyGpsForWatch(todayGps),
+        locale,
       });
     }
 

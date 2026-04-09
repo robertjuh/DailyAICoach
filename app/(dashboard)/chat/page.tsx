@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Send } from "lucide-react";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 interface Message {
   id: string;
@@ -20,6 +21,7 @@ export default function ChatPage() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { t } = useLocale();
 
   // Load chat history and suggestions on mount
   useEffect(() => {
@@ -137,7 +139,7 @@ export default function ChatPage() {
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantId
-              ? { ...m, content: "Sorry, something went wrong. Please try again." }
+              ? { ...m, content: t("chat.errorGeneric") }
               : m
           )
         );
@@ -161,9 +163,9 @@ export default function ChatPage() {
       <div className="flex-1 overflow-y-auto space-y-4 pb-4">
         {messages.length === 0 && (
           <div className="text-center py-12">
-            <h2 className="text-xl font-semibold mb-2">AI Coach</h2>
+            <h2 className="text-xl font-semibold mb-2">{t("chat.title")}</h2>
             <p className="text-muted-foreground mb-6">
-              Ask me anything about your routine, goals, or habits.
+              {t("chat.subtitle")}
             </p>
 
             {/* Suggestion cards */}
@@ -218,7 +220,7 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
+            placeholder={t("chat.placeholder")}
             rows={1}
             className="resize-none min-h-[44px] max-h-32"
             disabled={isStreaming}

@@ -1,7 +1,50 @@
 # TODOS (backlog)
-- BELANG! dim FW en NW moeten GOED samen werken
+// 08/04/2026
+- Bij de watches, de textvelden zo maken dat ze de text leesbaar laten zien
+- in "Open dims/carry forwarrd" staat in de reply ook "[MICRO_TASK]", dit soort tags kan ik eruit filteren (eerder een icoontje ervoor oid)
+- Aanpassen van de hoofddoelen moet mogelijk zijn
+
+- Op dashboard wil ik ook zien of ik first / night watch nog moet doen
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - Controleer of de FW initial prompt in acht wordt genomen
 -- misschien moet ie als je je eerste watch opent, gesubmit worden als je geen chat history hebt
+
+// TRANSLATION
+HIGHEST PRIO
+
+
+
+// ONBOARDING
+- je krijgt  het idee of je kan kiezen tussen first en night watch (ziet eruit als buttons), ook wil ik een dropdown voor timezones.
+- Doelen moet je later aan kunnen passen
+-- Doelen moeten misschien smart zijn, dus ook tijdgebonden (Een "Smart goal builder")
+-- "how would you describe your rhythm?", is niet echt duidelijk. (Dit wil je eigenlijk bij je first watch doen, niet hier)
+
+- Mischien de gebruiker ook de optie geven om de first en nightwatch een eigen naam te geven
 
 - Notificatioon naar je browser/app op je specified time
 
@@ -10,6 +53,10 @@
 
 - Fix filters sliders on dim page
 - implement a way to change goals
+
+
+
+- 
 
 
 - personality customiser

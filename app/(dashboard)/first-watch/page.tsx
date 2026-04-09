@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Check, Pencil, Sun, RotateCcw } from "lucide-react";
 import { WatchChat, type ChatMessage } from "@/components/watch/WatchChat";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 interface FirstWatchSections {
   gratitude: string[];
@@ -102,6 +103,7 @@ export default function FirstWatchPage() {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const { t } = useLocale();
 
   const loadWatch = useCallback(async () => {
     try {
@@ -218,7 +220,7 @@ export default function FirstWatchPage() {
       <div className="max-w-2xl mx-auto space-y-4">
         <div className="flex items-center gap-3">
           <Sun className="h-7 w-7 text-amber-500" />
-          <h1 className="text-2xl font-bold">First Watch</h1>
+          <h1 className="text-2xl font-bold">{t("firstWatch.title")}</h1>
         </div>
 
         <Card>
@@ -243,9 +245,9 @@ export default function FirstWatchPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Sun className="h-7 w-7 text-amber-500" />
-          <h1 className="text-2xl font-bold">First Watch</h1>
+          <h1 className="text-2xl font-bold">{t("firstWatch.title")}</h1>
           <Badge variant={isConfirmed ? "default" : "secondary"}>
-            {isConfirmed ? "Confirmed" : "Draft"}
+            {isConfirmed ? t("common.confirmed") : t("common.draft")}
           </Badge>
         </div>
         <div className="flex gap-2">
@@ -260,7 +262,7 @@ export default function FirstWatchPage() {
                 }}
               >
                 <RotateCcw className="h-4 w-4 mr-1" />
-                Redo
+                {t("common.redo")}
               </Button>
               <Button
                 variant="outline"
@@ -268,11 +270,11 @@ export default function FirstWatchPage() {
                 onClick={() => setEditing(true)}
               >
                 <Pencil className="h-4 w-4 mr-1" />
-                Edit
+                {t("common.edit")}
               </Button>
               <Button size="sm" onClick={confirmWatch} disabled={saving}>
                 <Check className="h-4 w-4 mr-1" />
-                Confirm
+                {t("common.confirm")}
               </Button>
             </>
           )}
@@ -283,17 +285,17 @@ export default function FirstWatchPage() {
               onClick={() => setEditing(true)}
             >
               <Pencil className="h-4 w-4 mr-1" />
-              Edit
+              {t("common.edit")}
             </Button>
           )}
           {isEditing && (
             <>
               <Button variant="outline" size="sm" onClick={saveDraft} disabled={saving}>
-                Save Draft
+                {t("common.saveDraft")}
               </Button>
               <Button size="sm" onClick={confirmWatch} disabled={saving}>
                 {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
-                Confirm
+                {t("common.confirm")}
               </Button>
             </>
           )}
@@ -301,23 +303,23 @@ export default function FirstWatchPage() {
       </div>
 
       <p className="text-xs text-muted-foreground italic">
-        This log observes the seas; it does not judge the sailor.
+        {t("firstWatch.motto")}
       </p>
 
       {/* Gratitude */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Gratitude</CardTitle>
+          <CardTitle className="text-base">{t("firstWatch.gratitude")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {sections.gratitude.map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="text-muted-foreground text-sm w-4">{i + 1}.</span>
               {isEditing ? (
-                <Input
+                <Textarea
                   value={item}
                   onChange={(e) => updateArrayItem("gratitude", i, e.target.value)}
-                  placeholder={`Gratitude item ${i + 1}`}
+                  placeholder={`${t("firstWatch.gratitudePlaceholder")} ${i + 1}`}
                 />
               ) : (
                 <span className="text-sm">{item || "—"}</span>
@@ -330,22 +332,22 @@ export default function FirstWatchPage() {
       {/* Wake Inheritance */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Wake Inheritance</CardTitle>
-          <p className="text-xs text-muted-foreground">from prior Night Watch</p>
+          <CardTitle className="text-base">{t("firstWatch.wakeInheritance")}</CardTitle>
+          <p className="text-xs text-muted-foreground">{t("firstWatch.fromPriorNightWatch")}</p>
         </CardHeader>
         <CardContent className="space-y-3">
           {(
             [
-              ["energy_state", "Energy State"],
-              ["constraints", "Constraints"],
-              ["open_loops", "Open Loops"],
-              ["emotional_residue", "Emotional Residue"],
-            ] as const
+              ["energy_state", t("firstWatch.energyState")],
+              ["constraints", t("firstWatch.constraints")],
+              ["open_loops", t("firstWatch.openLoops")],
+              ["emotional_residue", t("firstWatch.emotionalResidue")],
+            ] as [keyof typeof sections.wake_inheritance, string][]
           ).map(([key, label]) => (
             <div key={key}>
               <label className="text-xs font-medium text-muted-foreground">{label}</label>
               {isEditing ? (
-                <Input
+                <Textarea
                   value={sections.wake_inheritance[key]}
                   onChange={(e) =>
                     updateSection("wake_inheritance", {
@@ -397,7 +399,7 @@ export default function FirstWatchPage() {
           <div>
             <label className="text-xs font-medium text-muted-foreground">Primary Focus</label>
             {isEditing ? (
-              <Input
+              <Textarea
                 value={sections.mission_focus.primary_focus}
                 onChange={(e) =>
                   updateSection("mission_focus", {
@@ -424,7 +426,7 @@ export default function FirstWatchPage() {
             <div key={i} className="flex items-center gap-2">
               <span className="text-muted-foreground text-sm w-4">{i + 1}.</span>
               {isEditing ? (
-                <Input
+                <Textarea
                   value={item}
                   onChange={(e) => updateArrayItem("top_priorities", i, e.target.value)}
                   placeholder={`Priority ${i + 1}`}
@@ -447,9 +449,8 @@ export default function FirstWatchPage() {
             <label className="text-xs font-medium text-muted-foreground">Drift Risks</label>
             {sections.drift_watch.risks.map((risk, i) => (
               <div key={i} className="flex items-center gap-2 mt-1">
-                <span className="text-muted-foreground text-sm">-</span>
                 {isEditing ? (
-                  <Input
+                  <Textarea
                     value={risk}
                     onChange={(e) => {
                       const risks = [...sections.drift_watch.risks];
@@ -467,7 +468,7 @@ export default function FirstWatchPage() {
           <div>
             <label className="text-xs font-medium text-muted-foreground">Course Correction</label>
             {isEditing ? (
-              <Input
+              <Textarea
                 value={sections.drift_watch.course_correction}
                 onChange={(e) =>
                   updateSection("drift_watch", {
@@ -491,7 +492,7 @@ export default function FirstWatchPage() {
         </CardHeader>
         <CardContent>
           {isEditing ? (
-            <Input
+            <Textarea
               value={sections.movement}
               onChange={(e) => updateSection("movement", e.target.value)}
               placeholder="Planned movement today"
@@ -513,7 +514,6 @@ export default function FirstWatchPage() {
         <CardContent className="space-y-2">
           {sections.open_dims.map((dim, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="text-muted-foreground text-sm">-</span>
               {isEditing ? (
                 <div className="flex-1 flex gap-2">
                   <Input

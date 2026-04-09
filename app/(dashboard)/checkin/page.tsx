@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckInForm } from "@/components/checkin/CheckInForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 interface CheckInData {
   energy: number;
@@ -17,6 +18,7 @@ export default function CheckInPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
+  const { t } = useLocale();
 
   useEffect(() => {
     async function checkExisting() {
@@ -72,11 +74,11 @@ export default function CheckInPage() {
   // Already checked in — show read-only
   if (existing) {
     const labels: Record<number, string> = {
-      1: "Low",
-      2: "Below average",
-      3: "Average",
-      4: "Good",
-      5: "High",
+      1: t("common.low"),
+      2: t("common.belowAverage"),
+      3: t("common.average"),
+      4: t("common.good"),
+      5: t("common.high"),
     };
 
     return (
@@ -84,27 +86,27 @@ export default function CheckInPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              Daily Check-in <span className="text-green-600">&#10003;</span>
+              {t("checkin.title")} <span className="text-green-600">&#10003;</span>
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              You&apos;ve already checked in today
+              {t("checkin.alreadyDone")}
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between py-2">
-              <span className="font-medium">Energy</span>
+              <span className="font-medium">{t("checkin.energy")}</span>
               <span className="text-muted-foreground">
                 {existing.energy}/5 — {labels[existing.energy]}
               </span>
             </div>
             <div className="flex items-center justify-between py-2">
-              <span className="font-medium">Focus</span>
+              <span className="font-medium">{t("checkin.focus")}</span>
               <span className="text-muted-foreground">
                 {existing.focus}/5 — {labels[existing.focus]}
               </span>
             </div>
             <div className="flex items-center justify-between py-2">
-              <span className="font-medium">Mood</span>
+              <span className="font-medium">{t("checkin.mood")}</span>
               <span className="text-muted-foreground">
                 {existing.mood}/5 — {labels[existing.mood]}
               </span>

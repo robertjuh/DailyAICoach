@@ -7,17 +7,19 @@ import { createBrowserClient } from "@/lib/auth/supabase-browser";
 import { useRouter } from "next/navigation";
 import { useDimCount } from "@/lib/hooks/use-dim-count";
 import { useGpsStatus } from "@/lib/hooks/use-gps-status";
+import { useLocale } from "@/lib/i18n/locale-context";
+import { LanguageSwitcher } from "@/components/settings/LanguageSwitcher";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: Home },
-  { href: "/first-watch", label: "First Watch", icon: Sun },
-  { href: "/night-watch", label: "Night Watch", icon: Moon },
-  { href: "/hourly-gps", label: "Hourly GPS", icon: Compass },
-  { href: "/dims", label: "DIM Ledger", icon: Lightbulb },
-  { href: "/chat", label: "AI Coach", icon: Bot },
-  { href: "/routine", label: "My Routine", icon: ListChecks },
-  { href: "/progress", label: "Progress", icon: BarChart3 },
-  { href: "/checkin", label: "Check-in", icon: MessageCircle },
+  { href: "/", labelKey: "nav.dashboard", icon: Home },
+  { href: "/first-watch", labelKey: "nav.firstWatch", icon: Sun },
+  { href: "/night-watch", labelKey: "nav.nightWatch", icon: Moon },
+  { href: "/hourly-gps", labelKey: "nav.hourlyGps", icon: Compass },
+  { href: "/dims", labelKey: "nav.dims", icon: Lightbulb },
+  { href: "/chat", labelKey: "nav.chat", icon: Bot },
+  { href: "/routine", labelKey: "nav.routine", icon: ListChecks },
+  { href: "/progress", labelKey: "nav.progress", icon: BarChart3 },
+  { href: "/checkin", labelKey: "nav.checkin", icon: MessageCircle },
 ];
 
 export function Sidebar() {
@@ -25,6 +27,7 @@ export function Sidebar() {
   const router = useRouter();
   const dimCount = useDimCount();
   const gpsStatus = useGpsStatus();
+  const { t } = useLocale();
 
   async function handleSignOut() {
     const supabase = createBrowserClient();
@@ -37,7 +40,7 @@ export function Sidebar() {
       <div className="flex flex-col flex-1 min-h-0">
         {/* Logo */}
         <div className="flex items-center h-16 px-6 border-b border-border">
-          <h1 className="text-lg font-semibold text-primary">Daily Coach</h1>
+          <h1 className="text-lg font-semibold text-primary">{t("nav.appName")}</h1>
         </div>
 
         {/* Navigation */}
@@ -58,7 +61,7 @@ export function Sidebar() {
                 }`}
               >
                 <Icon className="h-5 w-5" />
-                {item.label}
+                {t(item.labelKey)}
                 {showBadge && (
                   <span className="ml-auto bg-primary text-primary-foreground text-xs font-medium px-1.5 py-0.5 rounded-full">
                     {dimCount}
@@ -72,14 +75,15 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* Sign out */}
-        <div className="px-3 py-4 border-t border-border">
+        {/* Language + Sign out */}
+        <div className="px-3 py-4 border-t border-border space-y-2">
+          <LanguageSwitcher />
           <button
             onClick={handleSignOut}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors w-full"
           >
             <LogOut className="h-5 w-5" />
-            Sign out
+            {t("common.signOut")}
           </button>
         </div>
       </div>

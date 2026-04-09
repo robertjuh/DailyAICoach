@@ -30,18 +30,18 @@ export async function POST(request: NextRequest) {
 
     const userMessage = parsed.data.message;
 
-    // 1. Build context and system prompt
+    // 1. Fetch user + build context and system prompt
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { timezone: true, locale: true },
+    });
     const context = await buildContext(userId);
     const adminPrompt = await prisma.adminPrompt
       .findUnique({ where: { key: "coach_system" } })
       .then((p) => p?.content ?? "");
-    const systemPrompt = buildSystemPrompt(context, adminPrompt);
+    const systemPrompt = buildSystemPrompt(context, adminPrompt, user?.locale ?? "en");
 
     // 2. Get or create today's conversation
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { timezone: true },
-    });
     const today = getUserToday(user?.timezone ?? "UTC");
 
     let conversation = await prisma.conversation.findUnique({

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pencil, Check, X, Sparkles, Loader2 } from "lucide-react";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 interface RoutineItem {
   id: string;
@@ -38,6 +39,7 @@ export default function RoutinePage() {
   const [saving, setSaving] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const { t } = useLocale();
 
   useEffect(() => {
     loadRoutines();
@@ -143,12 +145,12 @@ export default function RoutinePage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold">My Routines</h1>
+      <h1 className="text-2xl font-bold">{t("routine.title")}</h1>
 
       {routines.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-center text-muted-foreground">
-            No routines yet. Complete onboarding to get started!
+            {t("routine.noRoutines")}
           </CardContent>
         </Card>
       ) : (
@@ -215,7 +217,7 @@ export default function RoutinePage() {
                           updated[index] = { ...updated[index], name: e.target.value };
                           setEditItems(updated);
                         }}
-                        placeholder="Activity name"
+                        placeholder={t("routine.activityPlaceholder")}
                         className="flex-1"
                       />
                       <div className="flex items-center gap-1">
@@ -252,7 +254,7 @@ export default function RoutinePage() {
                       size="sm"
                       onClick={addItem}
                     >
-                      + Add item
+                      {t("routine.addItem")}
                     </Button>
                     <Button
                       variant="outline"
@@ -265,7 +267,7 @@ export default function RoutinePage() {
                       ) : (
                         <Sparkles className="h-4 w-4 mr-1" />
                       )}
-                      AI Suggestions
+                      {t("routine.aiSuggestions")}
                     </Button>
                   </div>
 
@@ -273,7 +275,7 @@ export default function RoutinePage() {
                   {aiSuggestions.length > 0 && (
                     <div className="pt-2 space-y-1">
                       <p className="text-xs text-muted-foreground font-medium">
-                        AI Suggestions — click to add:
+                        {t("routine.aiSuggestionsClickToAdd")}
                       </p>
                       {aiSuggestions.map((s, i) => (
                         <button
@@ -302,12 +304,12 @@ export default function RoutinePage() {
                     </div>
                   ))}
                   <p className="text-xs text-muted-foreground pt-2">
-                    Total:{" "}
+                    {t("common.total")}:{" "}
                     {routine.items.reduce(
                       (sum, i) => sum + i.duration_minutes,
                       0
                     )}{" "}
-                    minutes
+                    {t("common.minutes")}
                   </p>
                 </>
               )}
