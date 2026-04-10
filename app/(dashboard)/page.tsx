@@ -20,7 +20,7 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState("");
   const [items, setItems] = useState<RoutineItem[]>([]);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
-  // const [streak, setStreak] = useState(0);
+  const [streak, setStreak] = useState(0);
   const [goals, setGoals] = useState<{ id: string; title: string; is_active: boolean; created_at: string }[]>([]);
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [loading, setLoading] = useState(true);
