@@ -342,7 +342,7 @@ export default function NightWatchPage() {
       <Card>
         <CardContent className="p-4">
           {isEditing ? (
-            <Input
+            <Textarea
               value={sections.theme}
               onChange={(e) => setSections((prev) => ({ ...prev, theme: e.target.value }))}
               placeholder={t("nightWatch.themePlaceholder")}
@@ -372,7 +372,7 @@ export default function NightWatchPage() {
             <div key={key}>
               <label className="text-xs font-medium text-muted-foreground">{label}</label>
               {isEditing ? (
-                <Input
+                <Textarea
                   value={sections.bearings[key as keyof typeof sections.bearings]}
                   onChange={(e) =>
                     setSections((prev) => ({
@@ -409,7 +409,7 @@ export default function NightWatchPage() {
                     placeholder="9:00-11:30"
                     className="w-32"
                   />
-                  <Input
+                  <Textarea
                     value={fh.activity}
                     onChange={(e) => {
                       const updated = [...sections.focused_hours];
@@ -484,9 +484,8 @@ export default function NightWatchPage() {
         <CardContent className="space-y-2">
           {sections.wins.map((win, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="text-muted-foreground text-sm">-</span>
               {isEditing ? (
-                <Input
+                <Textarea
                   value={win}
                   onChange={(e) => {
                     const wins = [...sections.wins];
@@ -528,7 +527,7 @@ export default function NightWatchPage() {
             <div key={key}>
               <label className="text-xs font-medium text-muted-foreground">{label}</label>
               {isEditing ? (
-                <Input
+                <Textarea
                   value={sections.friction_and_drift[key]}
                   onChange={(e) =>
                     setSections((prev) => ({
@@ -552,7 +551,7 @@ export default function NightWatchPage() {
         </CardHeader>
         <CardContent>
           {isEditing ? (
-            <Input
+            <Textarea
               value={sections.emotional_weather}
               onChange={(e) =>
                 setSections((prev) => ({ ...prev, emotional_weather: e.target.value }))
@@ -572,7 +571,7 @@ export default function NightWatchPage() {
         </CardHeader>
         <CardContent>
           {isEditing ? (
-            <Input
+            <Textarea
               value={sections.movement}
               onChange={(e) => setSections((prev) => ({ ...prev, movement: e.target.value }))}
               placeholder="Movement completed today"
@@ -705,9 +704,8 @@ export default function NightWatchPage() {
             <label className="text-xs font-medium text-muted-foreground">Carry-forward tasks</label>
             {sections.wake_effect.carry_forward_tasks.map((task, i) => (
               <div key={i} className="flex items-center gap-2 mt-1">
-                <span className="text-muted-foreground text-sm">-</span>
                 {isEditing ? (
-                  <Input
+                  <Textarea
                     value={task}
                     onChange={(e) => {
                       const tasks = [...sections.wake_effect.carry_forward_tasks];
@@ -746,7 +744,7 @@ export default function NightWatchPage() {
           <div>
             <label className="text-xs font-medium text-muted-foreground">Energy state</label>
             {isEditing ? (
-              <Input
+              <Textarea
                 value={sections.wake_effect.energy_state}
                 onChange={(e) =>
                   setSections((prev) => ({
@@ -764,9 +762,8 @@ export default function NightWatchPage() {
             <label className="text-xs font-medium text-muted-foreground">Open loops</label>
             {sections.wake_effect.open_loops.map((loop, i) => (
               <div key={i} className="flex items-center gap-2 mt-1">
-                <span className="text-muted-foreground text-sm">-</span>
                 {isEditing ? (
-                  <Input
+                  <Textarea
                     value={loop}
                     onChange={(e) => {
                       const loops = [...sections.wake_effect.open_loops];
