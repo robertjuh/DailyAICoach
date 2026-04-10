@@ -75,27 +75,41 @@ export async function calculateStreak(userId: string): Promise<number> {
   if (!routine || routine.items.length === 0) return 0;
 
   const totalItems = routine.items.length;
-  let streak = 0;
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { timezone: true },
   });
   const today = getUserToday(user?.timezone ?? "UTC");
 
-  // Check backwards day by day
+  // Fetch last 365 days of logs in a single query, grouped by date
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - 365);
+
+  const dailyCounts = await prisma.dailyLog.groupBy({
+    by: ["date"],
+    where: {
+      user_id: userId,
+      date: { gte: startDate, lte: today },
+      completed: true,
+    },
+    _count: { id: true },
+  });
+
+  // Build a map of date string -> count for O(1) lookup
+  const countByDate = new Map<string, number>();
+  for (const row of dailyCounts) {
+    const dateStr = row.date.toISOString().split("T")[0];
+    countByDate.set(dateStr, row._count.id);
+  }
+
+  // Check backwards day by day using the in-memory map
+  let streak = 0;
   for (let i = 0; i < 365; i++) {
     const checkDate = new Date(today);
     checkDate.setDate(checkDate.getDate() - i);
+    const dateStr = checkDate.toISOString().split("T")[0];
+    const logsForDay = countByDate.get(dateStr) ?? 0;
 
-    const logsForDay = await prisma.dailyLog.count({
-      where: {
-        user_id: userId,
-        date: checkDate,
-        completed: true,
-      },
-    });
-
-    // Day counts if at least all items are completed
     if (logsForDay >= totalItems) {
       streak++;
     } else if (i === 0) {
