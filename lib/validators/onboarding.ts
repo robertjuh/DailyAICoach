@@ -5,8 +5,7 @@ export const onboardingSchema = z.object({
   timezone: z.string().min(1).max(100),
   goals: z
     .array(z.string().min(1).max(200))
-    .min(1, "At least one goal is required")
-    .max(3),
+    .min(1, "At least one goal is required"),
   work_description: z.string().max(300).optional(),
   default_day_type: z
     .enum(["build", "finish", "ship", "recover", "stabilize"])

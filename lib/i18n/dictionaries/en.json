@@ -217,6 +217,16 @@
     "readyFirstWatch": "Hi, I'm ready for my First Watch.",
     "readyNightWatch": "Hi, I'm ready for my Night Watch."
   },
+  "goals": {
+    "title": "Goals",
+    "noGoals": "No goals yet. Add your first goal to get started.",
+    "addGoal": "Add a goal",
+    "newGoalPlaceholder": "What are you working toward?",
+    "inactive": "Inactive",
+    "confirmDelete": "Confirm?",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate"
+  },
   "settings": {
     "language": "Language",
     "english": "English",

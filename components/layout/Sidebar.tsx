@@ -17,9 +17,9 @@ const navItems = [
   { href: "/hourly-gps", labelKey: "nav.hourlyGps", icon: Compass },
   { href: "/dims", labelKey: "nav.dims", icon: Lightbulb },
   { href: "/chat", labelKey: "nav.chat", icon: Bot },
-  { href: "/routine", labelKey: "nav.routine", icon: ListChecks },
-  { href: "/progress", labelKey: "nav.progress", icon: BarChart3 },
-  { href: "/checkin", labelKey: "nav.checkin", icon: MessageCircle },
+  // { href: "/routine", labelKey: "nav.routine", icon: ListChecks },
+  // { href: "/progress", labelKey: "nav.progress", icon: BarChart3 },
+  // { href: "/checkin", labelKey: "nav.checkin", icon: MessageCircle },
 ];
 
 export function Sidebar() {

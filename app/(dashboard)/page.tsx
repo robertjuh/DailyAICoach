@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { StreakCard } from "@/components/dashboard/StreakCard";
 import { TodayProgress } from "@/components/dashboard/TodayProgress";
+import { GoalsCard } from "@/components/dashboard/GoalsCard";
 import { RoutineChecklist } from "@/components/routine/RoutineChecklist";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/lib/i18n/locale-context";
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const [items, setItems] = useState<RoutineItem[]>([]);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [streak, setStreak] = useState(0);
+  const [goals, setGoals] = useState<{ id: string; title: string; is_active: boolean; created_at: string }[]>([]);
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const { t } = useLocale();
@@ -36,13 +38,14 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const [userRes, routineRes, logsRes, streakRes, checkinRes] =
+        const [userRes, routineRes, logsRes, streakRes, checkinRes, goalsRes] =
           await Promise.all([
             fetch("/api/v1/users/me"),
             fetch("/api/v1/routines/active"),
             fetch(`/api/v1/logs?date=${todayDate}`),
             fetch("/api/v1/progress/streak"),
             fetch("/api/v1/checkins/today"),
+            fetch("/api/v1/goals"),
           ]);
 
         if (userRes.ok) {
@@ -74,6 +77,11 @@ export default function DashboardPage() {
           const { data } = await checkinRes.json();
           setHasCheckedIn(data !== null);
         }
+
+        if (goalsRes.ok) {
+          const { data } = await goalsRes.json();
+          setGoals(data || []);
+        }
       } catch (err) {
         console.error("Failed to load dashboard:", err);
       } finally {
@@ -83,6 +91,18 @@ export default function DashboardPage() {
 
     loadDashboard();
   }, [todayDate]);
+
+  const handleGoalsChanged = useCallback(async () => {
+    try {
+      const res = await fetch("/api/v1/goals");
+      if (res.ok) {
+        const { data } = await res.json();
+        setGoals(data || []);
+      }
+    } catch (err) {
+      console.error("Failed to refresh goals:", err);
+    }
+  }, []);
 
   const handleToggle = useCallback(
     async (itemId: string) => {
@@ -140,24 +160,26 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">{today}</p>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+      {/* <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         <TodayProgress completed={completedIds.size} total={items.length} />
         <StreakCard streak={streak} />
-      </div>
+      </div> */}
 
-      <RoutineChecklist
+      <GoalsCard goals={goals} onGoalsChanged={handleGoalsChanged} />
+
+      {/* <RoutineChecklist
         items={items}
         completedIds={completedIds}
         onToggle={handleToggle}
-      />
+      /> */}
 
-      {!hasCheckedIn && (
+      {/* {!hasCheckedIn && (
         <Link href="/checkin">
           <Button variant="outline" className="w-full">
             {t("dashboard.completeCheckin")}
           </Button>
         </Link>
-      )}
+      )} */}
     </div>
   );
 }

@@ -217,6 +217,16 @@
     "readyFirstWatch": "Hoi, ik ben klaar voor mijn Eerste Wacht.",
     "readyNightWatch": "Hoi, ik ben klaar voor mijn Nachtwacht."
   },
+  "goals": {
+    "title": "Doelen",
+    "noGoals": "Nog geen doelen. Voeg je eerste doel toe om te beginnen.",
+    "addGoal": "Doel toevoegen",
+    "newGoalPlaceholder": "Waar werk je naartoe?",
+    "inactive": "Inactief",
+    "confirmDelete": "Bevestigen?",
+    "deactivate": "Deactiveren",
+    "reactivate": "Heractiveren"
+  },
   "settings": {
     "language": "Taal",
     "english": "English",

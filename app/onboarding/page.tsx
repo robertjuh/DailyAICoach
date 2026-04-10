@@ -190,23 +190,43 @@ export default function OnboardingPage() {
               <div className="space-y-3">
                 <Label>Your goals (at least 1)</Label>
                 {goals.map((goal, i) => (
-                  <Input
-                    key={i}
-                    value={goal}
-                    onChange={(e) => {
-                      const updated = [...goals];
-                      updated[i] = e.target.value;
-                      setGoals(updated);
-                    }}
-                    placeholder={
-                      [
-                        "Ship my side project",
-                        "Build a writing habit",
-                        "Recover consistent sleep",
-                      ][i]
-                    }
-                  />
+                  <div key={i} className="flex gap-2">
+                    <Input
+                      value={goal}
+                      onChange={(e) => {
+                        const updated = [...goals];
+                        updated[i] = e.target.value;
+                        setGoals(updated);
+                      }}
+                      placeholder={
+                        [
+                          "Ship my side project",
+                          "Build a writing habit",
+                          "Recover consistent sleep",
+                        ][i] ?? "Another goal"
+                      }
+                    />
+                    {goals.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setGoals(goals.filter((_, j) => j !== i))}
+                        className="shrink-0 text-muted-foreground"
+                      >
+                        ✕
+                      </Button>
+                    )}
+                  </div>
                 ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setGoals([...goals, ""])}
+                >
+                  + Add another goal
+                </Button>
               </div>
 
               {/* Work description */}

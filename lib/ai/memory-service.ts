@@ -46,6 +46,38 @@ export async function saveMemory(
   });
 }
 
+export async function updateGoalMemory(
+  userId: string,
+  oldTitle: string,
+  newTitle: string
+) {
+  const existing = await prisma.memoryEntry.findFirst({
+    where: {
+      user_id: userId,
+      category: "GOAL",
+      content: `User wants to: ${oldTitle}`,
+    },
+  });
+
+  if (existing) {
+    return prisma.memoryEntry.update({
+      where: { id: existing.id },
+      data: { content: `User wants to: ${newTitle}` },
+    });
+  }
+  return saveMemory(userId, "GOAL", `User wants to: ${newTitle}`, "goals");
+}
+
+export async function deleteGoalMemory(userId: string, goalTitle: string) {
+  await prisma.memoryEntry.deleteMany({
+    where: {
+      user_id: userId,
+      category: "GOAL",
+      content: `User wants to: ${goalTitle}`,
+    },
+  });
+}
+
 /**
  * Parses [MEMORY: CATEGORY: content] tags from AI responses and saves them.
  * Example: [MEMORY: GOAL: User wants to run a marathon]
