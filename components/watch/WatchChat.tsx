@@ -44,6 +44,10 @@ export function WatchChat({ watchType, onGenerate, generating }: WatchChatProps)
     setStreaming(true);
 
     try {
+      console.log("[WatchChat] Calling /api/v1/watches/chat", {
+        watchType,
+        messageCount: updated.length,
+      });
       const res = await fetch("/api/v1/watches/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

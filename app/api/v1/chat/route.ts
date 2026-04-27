@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const context = await buildContext(userId);
     const adminPrompt = await prisma.adminPrompt
       .findUnique({ where: { key: "coach_system" } })
-      .then((p) => p?.content ?? "");
+      .then((p: { content: string } | null) => p?.content ?? "");
     const systemPrompt = buildSystemPrompt(context, adminPrompt, user?.locale ?? "en");
 
     // 2. Get or create today's conversation
@@ -68,12 +68,29 @@ export async function POST(request: NextRequest) {
     // 4. Build messages array for OpenAI
     const messages: OpenAI.ChatCompletionMessageParam[] = [
       { role: "system", content: systemPrompt },
-      ...conversation.messages.map((m) => ({
+      ...conversation.messages.map((m: { role: string; content: string }) => ({
         role: m.role === "USER" ? ("user" as const) : ("assistant" as const),
         content: m.content,
       })),
       { role: "user" as const, content: userMessage },
     ];
+
+    console.log("[Chat API] OpenAI payload start");
+    console.log(
+      JSON.stringify(
+        {
+          userId,
+          userMessage,
+          context,
+          adminPrompt,
+          systemPrompt,
+          messages,
+        },
+        null,
+        2
+      )
+    );
+    console.log("[Chat API] OpenAI payload end");
 
     // 5. Stream response from OpenAI
     const stream = await openai.chat.completions.create({

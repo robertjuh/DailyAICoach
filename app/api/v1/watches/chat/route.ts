@@ -6,6 +6,7 @@ import { extractAndSaveDims } from "@/lib/ai/memory-service";
 import OpenAI from "openai";
 import { getOpenAIModel } from "@/lib/ai/model-config";
 import { getUserToday } from "@/lib/date-utils";
+import { isPromptDebugEnabled } from "@/lib/config/env";
 import { z } from "zod";
 import {
   formatNightWatchForFirstWatch,
@@ -164,7 +165,13 @@ export async function POST(request: NextRequest) {
     const dimsSummary =
       openDims.length > 0
         ? openDims
-            .map((d) => {
+            .map((d: {
+              id: string;
+              category: string;
+              content: string;
+              priority_score: number | null;
+              recommendation: string | null;
+            }) => {
               const score =
                 d.priority_score !== null ? ` [score: ${d.priority_score}]` : "";
               const rec = d.recommendation ? ` → ${d.recommendation}` : "";
@@ -191,6 +198,18 @@ export async function POST(request: NextRequest) {
         content: m.content,
       })),
     ];
+
+    if (isPromptDebugEnabled()) {
+      console.log("[WatchChat API] OpenAI payload", {
+        watchType,
+        context,
+        dimsSummary,
+        priorWatch,
+        gpsData,
+        systemPrompt,
+        messages: openaiMessages,
+      });
+    }
 
     const stream = await openai.chat.completions.create({
       model: getOpenAIModel(),
