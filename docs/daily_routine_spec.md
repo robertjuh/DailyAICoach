@@ -255,4 +255,4 @@ The following questions require further exploration:
 
 ---
 
-*Daily Routine App · Product Specification v1.0 · Confidential internal document*
+*Daily Routine App · Product Specification v1.1 · Confidential internal document*

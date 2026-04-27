@@ -83,6 +83,7 @@ export default function HourlyGpsPage() {
   }, [fetchData]);
 
   async function handleSubmit(e: React.FormEvent) {
+    console.log("handleSubmit", workingOn, driftNote, win, energy, nextPlan, dimCapture);
     e.preventDefault();
     if (!workingOn.trim()) return;
 

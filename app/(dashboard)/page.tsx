@@ -38,10 +38,10 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const [userRes, routineRes, logsRes, streakRes, checkinRes, goalsRes] =
+        const [userRes, logsRes, streakRes, checkinRes, goalsRes] =
           await Promise.all([
             fetch("/api/v1/users/me"),
-            fetch("/api/v1/routines/active"),
+            //fetch("/api/v1/routines/active"),
             fetch(`/api/v1/logs?date=${todayDate}`),
             fetch("/api/v1/progress/streak"),
             fetch("/api/v1/checkins/today"),
@@ -53,10 +53,10 @@ export default function DashboardPage() {
           setUserName(data.name || "there");
         }
 
-        if (routineRes.ok) {
-          const { data } = await routineRes.json();
-          setItems(data.items || []);
-        }
+        // if (routineRes.ok) {
+        //   const { data } = await routineRes.json();
+        //   setItems(data.items || []);
+        // }
 
         if (logsRes.ok) {
           const { data } = await logsRes.json();
