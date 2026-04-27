@@ -36,8 +36,8 @@ export function LocaleProvider({
     setLocaleState(newLocale);
     setDict(dictionaries[newLocale]);
     try {
-      await fetch("/api/v1/users/me", {
-        method: "PATCH",
+      await fetch("/api/v1/preferences/locale", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ locale: newLocale }),
       });

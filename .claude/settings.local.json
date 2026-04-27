@@ -59,7 +59,8 @@
       "Bash(ls \"/root/devprojects/DailyAICoach/app/\\(dashboard\\)/chat/\")",
       "Bash(node -e \"const {Pool} = require\\(''pg''\\); console.log\\(''Pool available:'', typeof Pool\\)\")",
       "Bash(find /root/devprojects/DailyAICoach -name *goal* -type f)",
-      "Bash(find /root/devprojects/DailyAICoach -path */goals/* -o -name *goals*)"
+      "Bash(find /root/devprojects/DailyAICoach -path */goals/* -o -name *goals*)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
     ]
   }
 }

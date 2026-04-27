@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
     const {
       name,
       timezone,
+      locale,
       goals,
       work_description,
       default_day_type,
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
       update: {
         name,
         timezone,
+        locale,
         first_watch_time,
         night_watch_time,
         notify_enabled,
@@ -46,6 +48,7 @@ export async function POST(request: NextRequest) {
         email: supabaseUser.email!,
         name,
         timezone,
+        locale,
         first_watch_time,
         night_watch_time,
         notify_enabled,

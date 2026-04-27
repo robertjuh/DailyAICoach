@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
+import { LocaleProvider, type Locale } from "@/lib/i18n/locale-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,17 +20,21 @@ export const metadata: Metadata = {
     "Your personal AI coach for building and maintaining healthy daily routines.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const cookieValue = cookieStore.get("locale")?.value;
+  const locale: Locale = cookieValue === "nl" ? "nl" : "en";
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
       </body>
     </html>
   );

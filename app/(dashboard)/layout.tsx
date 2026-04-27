@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/auth/supabase";
 import { prisma } from "@/lib/db/client";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { LocaleSync } from "@/components/i18n/LocaleSync";
 import type { Locale } from "@/lib/i18n/locale-context";
 
 export default async function DashboardLayout({
@@ -18,7 +19,6 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Check onboarding status
   const dbUser = await prisma.user.findUnique({
     where: { supabase_id: user.id },
   });
@@ -27,10 +27,11 @@ export default async function DashboardLayout({
     redirect("/onboarding");
   }
 
-  const locale = (dbUser.locale ?? "en") as Locale;
+  const dbLocale = (dbUser.locale ?? "en") as Locale;
 
   return (
-    <DashboardShell locale={locale}>
+    <DashboardShell>
+      <LocaleSync dbLocale={dbLocale} />
       {children}
     </DashboardShell>
   );

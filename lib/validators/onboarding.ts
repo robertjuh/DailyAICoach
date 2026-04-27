@@ -3,6 +3,7 @@ import { z } from "zod";
 export const onboardingSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   timezone: z.string().min(1).max(100),
+  locale: z.enum(["en", "nl"]).optional().default("en"),
   goals: z
     .array(z.string().min(1).max(200))
     .min(1, "At least one goal is required"),
